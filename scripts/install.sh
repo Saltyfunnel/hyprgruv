@@ -88,13 +88,14 @@ if [ "$CONFIRMATION" == "yes" ]; then
     read -p "Update system and install packages? Press Enter to continue..."
 fi
 # The adwaita-qt package was removed to fix a 'target not found' error.
+# ADDED 'wofi' to the list of packages.
 PACKAGES=(
     git base-devel pipewire wireplumber pamixer brightnessctl
     ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-fira-code ttf-fira-mono
     sddm kitty nano tar unzip gnome-disk-utility code mpv dunst pacman-contrib exo firefox cava steam
     thunar thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer file-roller
     gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome
-    waybar hyprland hyprpaper hypridle hyprlock starship fastfetch
+    waybar hyprland hyprpaper hypridle hyprlock starship fastfetch wofi
     gnome-themes-extra
 )
 if ! pacman -Syu "${PACKAGES[@]:-}" --noconfirm; then
@@ -165,6 +166,11 @@ copy_configs "$SCRIPT_DIR/configs/waybar" "$CONFIG_DIR/waybar" "Waybar"
 copy_configs "$SCRIPT_DIR/configs/hypr" "$CONFIG_DIR/hypr" "Hyprland"
 copy_configs "$SCRIPT_DIR/configs/kitty" "$CONFIG_DIR/kitty" "Kitty"
 copy_configs "$SCRIPT_DIR/configs/dunst" "$CONFIG_DIR/dunst" "Dunst"
+# ADDED new copy configs for fastfetch, starship, and wofi.
+copy_configs "$SCRIPT_DIR/configs/fastfetch" "$CONFIG_DIR/fastfetch" "Fastfetch"
+copy_configs "$SCRIPT_DIR/configs/starship" "$CONFIG_DIR/starship" "Starship"
+copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
+
 
 # --- Setting up GTK themes and icons from their git repositories ---
 print_header "Installing GTK themes and icons"
@@ -273,6 +279,13 @@ if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = dunst" "$HYPR_CONF"; then
 fi
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = hypridle" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Launch hypridle for power management and locking\nexec-once = hypridle" >> "$HYPR_CONF"
+fi
+# ADDED exec-once commands for wofi and starship
+if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = wofi" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Launch wofi, the application launcher\nexec-once = wofi --show drun -i" >> "$HYPR_CONF"
+fi
+if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = starship" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Launch starship, the shell prompt\nexec-once = starship init bash" >> "$HYPR_CONF"
 fi
 print_success "✅ hyprland.conf updated with core components."
 

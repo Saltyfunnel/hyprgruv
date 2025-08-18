@@ -1,17 +1,24 @@
+// ==============================================================================
+// Fastfetch Configuration - Gruvbox Theme
+// This configuration file styles Fastfetch to use the Gruvbox color palette.
+// ==============================================================================
+
 {
-  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
+    // The logo will be a random Gruvbox-themed PNG from the specified directory.
     "source": "$(find \"${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch/pngs/\" -name \"*.png\" | sort -R | head -1)",
     "height": 28,
     "padding": { "top": 3, "right": 4, "bottom": 1, "left": 4 }
   },
   "display": {
-    "separator": "\u001b[38;2;248;248;242m : "
+    // Sets the separator color to a lighter Gruvbox tone.
+    "separator": "\u001b[38;2;235;219;173m : "
   },
   "modules": [
     {
       "type": "custom",
-      "format": "  \u001b[38;2;189;147;249m               "
+      // Custom module for a top decorative line using a Gruvbox color.
+      "format": "  \u001b[38;2;168;153;132m               "
     },
     {
       "type": "custom",
@@ -19,7 +26,8 @@
     },
     {
       "type": "custom",
-      "format": "  \u001b[38;2;80;250;123m   My conscience is clean — I have never used it.  "
+      // Custom quote with a Gruvbox green foreground color.
+      "format": "  \u001b[38;2;152;151;26m    My conscience is clean — I have never used it.  "
     },
     {
       "type": "custom",
@@ -27,53 +35,65 @@
     },
     {
       "type": "os",
-      "key": "\u001b[38;2;139;233;253m   OS"
+      // OS key with Gruvbox aqua color.
+      "key": "\u001b[38;2;69;133;136m   OS"
     },
     {
       "type": "kernel",
-      "key": "\u001b[38;2;189;147;249m   Kernel"
+      // Kernel key with Gruvbox purple color.
+      "key": "\u001b[38;2;177;98;184m   Kernel"
     },
     {
       "type": "packages",
-      "key": "\u001b[38;2;139;233;253m  󰏗 Packages"
+      // Packages key with Gruvbox aqua color.
+      "key": "\u001b[38;2;69;133;136m  󰏗 Packages"
     },
     {
       "type": "display",
-      "key": "\u001b[38;2;255;184;108m  󱍜 Display"
+      // Display key with Gruvbox orange color.
+      "key": "\u001b[38;2;254;128;25m  󱍜 Display"
     },
     {
       "type": "wm",
-      "key": "\u001b[38;2;189;147;249m   WM"
+      // WM key with Gruvbox purple color.
+      "key": "\u001b[38;2;177;98;184m   WM"
     },
     {
       "type": "terminal",
-      "key": "\u001b[38;2;80;250;123m   Terminal"
+      // Terminal key with Gruvbox green color.
+      "key": "\u001b[38;2;152;151;26m   Terminal"
     },
     {
       "type": "media",
-      "key": "\u001b[38;2;139;233;253m  󰝚 Music"
+      // Music key with Gruvbox aqua color.
+      "key": "\u001b[38;2;69;133;136m  󰝚 Music"
     },
     {
       "type": "command",
-      "key": "\u001b[38;2;255;184;108m  󱦟 OS Age",
+      // OS Age key with Gruvbox orange color.
+      "key": "\u001b[38;2;254;128;25m  󱦟 OS Age",
       "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
     },
     {
       "type": "uptime",
-      "key": "\u001b[38;2;139;233;253m  "
+      // Uptime key with Gruvbox aqua color.
+      "key": "\u001b[38;2;69;133;136m  "
     },
     {
       "type": "custom",
-      "format": "\u001b[38;2;255;121;198m  󰊤 GitHub : Saltyfunnel"
+      // GitHub custom key with Gruvbox purple color.
+      "format": "\u001b[38;2;211;134;160m  󰊤 GitHub : Saltyfunnel"
     },
     {
       "type": "battery",
-      "key": "\u001b[38;2;255;184;108m   Battery"
+      // Battery key with Gruvbox orange color.
+      "key": "\u001b[38;2;254;128;25m   Battery"
     },
     "break",
     {
       "type": "title",
-      "key": "\u001b[38;2;189;147;249m   User"
+      // User title with Gruvbox purple color.
+      "key": "\u001b[38;2;177;98;184m   User"
     },
     {
       "type": "custom",
@@ -82,21 +102,25 @@
     {
       "type": "cpu",
       "format": "{1}",
-      "keyColor": "\u001b[38;2;189;147;249m"
+      // CPU key color with Gruvbox purple.
+      "keyColor": "\u001b[38;2;177;98;184m"
     },
     {
       "type": "gpu",
       "format": "{2}",
-      "keyColor": "\u001b[38;2;139;233;253m"
+      // GPU key color with Gruvbox aqua.
+      "keyColor": "\u001b[38;2;69;133;136m"
     },
     {
       "type": "gpu",
       "format": "{3}",
-      "keyColor": "\u001b[38;2;255;184;108m"
+      // GPU key color with Gruvbox orange.
+      "keyColor": "\u001b[38;2;254;128;25m"
     },
     {
       "type": "memory",
-      "key": "\u001b[38;2;189;147;249m   Memory"
+      // Memory key with Gruvbox purple color.
+      "key": "\u001b[38;2;177;98;184m   Memory"
     },
     {
       "type": "custom",
@@ -105,7 +129,8 @@
     "break",
     {
       "type": "custom",
-      "format": "  \u001b[38;2;189;147;249m               "
+      // Custom module for a bottom decorative line using a Gruvbox color.
+      "format": "  \u001b[38;2;168;153;132m               "
     },
     "break"
   ]

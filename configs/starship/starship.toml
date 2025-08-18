@@ -62,7 +62,7 @@ truncation_length = 3
 truncation_symbol = "…/"
 
 [directory.substitutions]
-"Documents" = "� "
+"Documents" = " "
 "Downloads" = " "
 "Music" = " "
 "Pictures" = " "
@@ -98,7 +98,7 @@ style = "bg:#98971a fg:#282828"
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
-style = "bg:#98971a fg:#282828"
+style = "bg:#98971a fg:#28228"
 format = '[$all_status$ahead_behind ]($style)'
 
 [golang]
@@ -150,4 +150,3 @@ disabled = false
 time_format = "%R" # Hour:Minute Format
 style = "bg:#fe8019 fg:#282828"
 format = '[ ⏰ $time ]($style)'
-�

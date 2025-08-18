@@ -1,28 +1,28 @@
 /*
- * Wofi Configuration File - Dracula Theme
+ * Wofi Configuration File - Gruvbox Theme
  * This file provides a full CSS-based configuration for the Wofi application launcher,
- * styled with the Dracula color palette.
+ * styled with the Gruvbox color palette.
  */
 
-/* Dracula Color Palette - Defined as CSS variables for easy customization */
+/* Gruvbox Color Palette - Defined as CSS variables for easy customization */
 :root {
-    --dracula-background: #282a36;
-    --dracula-foreground: #f8f8f2;
-    --dracula-selection: #44475a;
-    --dracula-purple: #bd93f9;
-    --dracula-pink: #ff79c6;
-    --dracula-cyan: #8be9fd;
-    --dracula-green: #50fa7b;
-    --dracula-orange: #ffb86c;
-    --dracula-red: #ff5555;
-    --dracula-yellow: #f1fa8c;
-    --dracula-comment: #6272a4;
+    --gruvbox-background: #282828;
+    --gruvbox-foreground: #ebdbb2;
+    --gruvbox-selection: #504945;
+    --gruvbox-purple: #b162b8;
+    --gruvbox-pink: #d65d0e;
+    --gruvbox-cyan: #698588;
+    --gruvbox-green: #98971a;
+    --gruvbox-orange: #fe8019;
+    --gruvbox-red: #cc241d;
+    --gruvbox-yellow: #d79921;
+    --gruvbox-comment: #a89984;
 }
 
 /* Main window styling */
 #window {
-    background-color: var(--dracula-background);
-    border: 2px solid var(--dracula-purple);
+    background-color: var(--gruvbox-background);
+    border: 2px solid var(--gruvbox-purple);
     border-radius: 12px;
     padding: 15px;
     font-family: 'JetBrainsMono Nerd Font', 'Fira Code', sans-serif;
@@ -30,8 +30,8 @@
 
 /* Input field styling */
 #input {
-    background-color: var(--dracula-selection);
-    color: var(--dracula-foreground);
+    background-color: var(--gruvbox-selection);
+    color: var(--gruvbox-foreground);
     border: none;
     border-radius: 8px;
     padding: 10px;
@@ -50,7 +50,7 @@
 /* Individual entry (application) styling */
 #entry {
     background-color: transparent;
-    color: var(--dracula-foreground);
+    color: var(--gruvbox-foreground);
     padding: 8px;
     margin: 4px 0;
     border-radius: 6px;
@@ -60,22 +60,22 @@
 
 /* Styling for a focused/selected entry */
 #entry:focus {
-    background-color: var(--dracula-selection);
-    color: var(--dracula-purple);
+    background-color: var(--gruvbox-selection);
+    color: var(--gruvbox-purple);
 }
 
 /* Styling for a focused/selected text inside the entry */
 #entry:focus text {
-    color: var(--dracula-purple);
+    color: var(--gruvbox-purple);
 }
 
 /* Styling for the entry text itself */
 #entry text {
-    color: var(--dracula-foreground);
+    color: var(--gruvbox-foreground);
 }
 
 /* Placeholder text styling (for when no input is entered) */
 #input:empty:before {
     content: "Search for applications...";
-    color: var(--dracula-comment);
+    color: var(--gruvbox-comment);
 }

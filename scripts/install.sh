@@ -117,8 +117,8 @@ copy_configs() {
     local config_name="$3"
 
     print_success "Copying $config_name from '$source_dir' to '$dest_dir'."
-    sudo -u "$USER_NAME" mkdir -p "$(dirname "$dest_dir")"
-    sudo -u "$USER_NAME" cp -r "$source_dir" "$dest_dir"
+    sudo -u "$USER_NAME" mkdir -p "$dest_dir"
+    sudo -u "$USER_NAME" cp -r "$source_dir/." "$dest_dir"
     print_success "✅ Copied $config_name."
 }
 
@@ -127,7 +127,8 @@ copy_configs "$SCRIPT_DIR/configs/hypr" "$CONFIG_DIR/hypr" "Hyprland"
 copy_configs "$SCRIPT_DIR/configs/kitty" "$CONFIG_DIR/kitty" "Kitty"
 copy_configs "$SCRIPT_DIR/configs/dunst" "$CONFIG_DIR/dunst" "Dunst"
 copy_configs "$SCRIPT_DIR/configs/fastfetch" "$CONFIG_DIR/fastfetch" "Fastfetch"
-# starship.toml is a file, copy directly to ~/.config/starship.toml
+# Starship.toml is a file, so copy it directly:
+sudo -u "$USER_NAME" mkdir -p "$CONFIG_DIR"
 sudo -u "$USER_NAME" cp "$SCRIPT_DIR/configs/starship/starship.toml" "$CONFIG_DIR/starship.toml"
 print_success "✅ Copied Starship configuration."
 copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
@@ -141,14 +142,14 @@ ICONS_NAME="Gruvbox-Plus-Dark"
 
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR" "$ICONS_DIR"
 
-# Clone GTK theme from bryos/gruvbox-gtk-theme (prebuilt)
+# Clone GTK theme (alternative repo)
 TEMP_THEME_DIR=$(sudo -u "$USER_NAME" mktemp -d)
 THEME_REPO_ALT="https://gitlab.com/bryos/gruvbox-gtk-theme.git"
 sudo -u "$USER_NAME" git clone "$THEME_REPO_ALT" "$TEMP_THEME_DIR/gruvbox-gtk-theme"
 sudo -u "$USER_NAME" cp -r "$TEMP_THEME_DIR/gruvbox-gtk-theme" "$THEMES_DIR/$THEME_NAME"
 rm -rf "$TEMP_THEME_DIR"
 
-# Clone icon theme (Gruvbox Plus Dark)
+# Clone icon theme
 TEMP_ICON_DIR=$(sudo -u "$USER_NAME" mktemp -d)
 ICONS_REPO="https://github.com/SylEleuth/gruvbox-plus-icon-pack.git"
 sudo -u "$USER_NAME" git clone "$ICONS_REPO" "$TEMP_ICON_DIR/gruvbox-plus-icon-pack"
@@ -173,10 +174,11 @@ fi
 
 # --- Hyprland vars ---
 HYPR_VARS_FILE="$CONFIG_DIR/hypr/hypr-vars.conf"
+sudo -u "$USER_NAME" mkdir -p "$CONFIG_DIR/hypr"
 sudo -u "$USER_NAME" tee "$HYPR_VARS_FILE" >/dev/null <<EOF
-env = GTK_THEME,$THEME_NAME
-env = ICON_THEME,$ICONS_NAME
-env = XDG_CURRENT_DESKTOP,Hyprland
+export GTK_THEME=$THEME_NAME
+export ICON_THEME=$ICONS_NAME
+export XDG_CURRENT_DESKTOP=Hyprland
 EOF
 
 # --- Hyprland config updates ---
@@ -187,7 +189,8 @@ append_once() {
 }
 
 append_once "source = $HYPR_VARS_FILE"
-append_once "exec-once = waybar"
+# Remove exec-once waybar to avoid double instances:
+# append_once "exec-once = waybar"
 append_once "exec-once = dunst"
 append_once "exec-once = hypridle"
 append_once "exec-once = wofi --show drun -i"
@@ -218,7 +221,9 @@ EOF
 fi
 
 pkill thunar &>/dev/null || true
-sudo -u "$USER_NAME" thunar & disown &>/dev/null
-print_success "✅ Thunar restarted. Theme and icons applied."
+# Start thunar with environment variables so GTK theme applies correctly
+sudo -u "$USER_NAME" env GTK_THEME="$THEME_NAME" GTK_ICON_THEME="$ICONS_NAME" thunar & disown &>/dev/null
+
+print_success "✅ Thunar restarted with Gruvbox theme."
 
 print_success "\n🎉 Installation complete. Reboot to fully apply changes."

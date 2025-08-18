@@ -178,8 +178,8 @@ else
     print_warning "starship.toml not found in the source directory. The default configuration will be used."
 fi
 
-# --- Automatic Download of GTK themes and Icons with Git and Curl ---
-print_header "Downloading and setting up GTK themes and icons with Git and Curl"
+# --- Automatic Download of GTK themes and Icons with Curl and Unzip ---
+print_header "Downloading and setting up GTK themes and icons with Curl and Unzip"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
 TEMP_DIR="/tmp/gruvbox-setup"
@@ -189,18 +189,22 @@ print_success "Cleaning up old theme, icon, and temporary directories..."
 sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk" "$ICONS_DIR/Gruvbox" "$TEMP_DIR"
 print_success "✅ Old directories removed."
 
-# Clone the GTK theme using git
-GTK_THEME_REPO="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
-print_success "Cloning Gruvbox GTK theme..."
-if ! sudo -u "$USER_NAME" git clone --depth 1 "$GTK_THEME_REPO" "$TEMP_DIR/gruvbox-gtk"; then
-    print_error "Failed to clone Gruvbox GTK theme from '$GTK_THEME_REPO'."
+# Download and unzip the GTK theme using curl
+GTK_THEME_ZIP_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme/archive/refs/heads/main.zip"
+GTK_THEME_REPO_NAME="Gruvbox-GTK-Theme-main"
+print_success "Downloading and unzipping Gruvbox GTK theme..."
+if ! sudo -u "$USER_NAME" curl -L "$GTK_THEME_ZIP_URL" -o "$TEMP_DIR/gruvbox-gtk.zip"; then
+    print_error "Failed to download Gruvbox GTK theme from '$GTK_THEME_ZIP_URL'."
 fi
-print_success "✅ GTK theme cloned successfully."
+if ! sudo -u "$USER_NAME" unzip -q "$TEMP_DIR/gruvbox-gtk.zip" -d "$TEMP_DIR"; then
+    print_error "Failed to unzip the Gruvbox GTK theme file."
+fi
+print_success "✅ GTK theme downloaded and unzipped successfully."
 
 # Move the theme to its final location
 print_success "Installing Gruvbox GTK theme..."
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
-sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-gtk" "$THEMES_DIR/gruvbox-gtk"
+sudo -u "$USER_NAME" mv "$TEMP_DIR/$GTK_THEME_REPO_NAME" "$THEMES_DIR/gruvbox-gtk"
 print_success "✅ Gruvbox GTK theme installation completed."
 
 # Download and unzip the icon pack using curl

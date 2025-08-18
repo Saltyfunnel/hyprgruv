@@ -188,6 +188,20 @@ GRUBOX_REPO_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
 CLONE_DIR="/tmp/gruvbox-clone"
 THEME_DIR_NAME="Gruvbox-GTK-Theme"
 
+# Check and remove existing directories for a clean install
+if [[ -d "$CLONE_DIR" ]]; then
+    print_warning "Clearing old clone directory at $CLONE_DIR."
+    sudo rm -rf "$CLONE_DIR"
+fi
+if [[ -d "$THEMES_DIR/$THEME_DIR_NAME" ]]; then
+    print_warning "Removing old theme directory at $THEMES_DIR/$THEME_DIR_NAME."
+    sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/$THEME_DIR_NAME"
+fi
+if [[ -d "$ICONS_DIR/Gruvbox" ]]; then
+    print_warning "Removing old icons directory at $ICONS_DIR/Gruvbox."
+    sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/Gruvbox"
+fi
+
 # Clone the repository
 if ! sudo -u "$USER_NAME" git clone --depth 1 "$GRUBOX_REPO_URL" "$CLONE_DIR"; then
     print_error "Failed to clone the Gruvbox GTK repository. Please check your internet connection."

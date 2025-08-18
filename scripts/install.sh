@@ -175,7 +175,8 @@ THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
 
 # Create a temporary directory for cloning
-TEMP_DIR=$(mktemp -d)
+print_success "Creating temporary directory..."
+TEMP_DIR=$(sudo -u "$USER_NAME" mktemp -d)
 print_success "Created temporary directory: $TEMP_DIR"
 
 # Clone the repositories

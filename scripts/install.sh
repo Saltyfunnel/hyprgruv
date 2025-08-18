@@ -87,7 +87,7 @@ print_header "Starting System-Level Setup"
 if [ "$CONFIRMATION" == "yes" ]; then
     read -p "Update system and install packages? Press Enter to continue..."
 fi
-# The adwaita-qt package has been removed as it is no longer in the official repositories.
+# The adwaita-qt package was removed to fix a 'target not found' error.
 PACKAGES=(
     git base-devel pipewire wireplumber pamixer brightnessctl
     ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-fira-code ttf-fira-mono
@@ -194,16 +194,19 @@ sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-i
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 
-# Move the cloned files to their final destinations with correct names
-print_success "Moving theme files to $THEMES_DIR/$THEME_NAME..."
-# The theme is in a subfolder, so we must move the correct one.
+# Corrected the file move commands to use 'cp' to avoid the inter-device error.
+# We are copying the contents instead of moving the directory itself.
+
+# Copy theme files
+print_success "Copying theme files to $THEMES_DIR/$THEME_NAME..."
 if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" ]; then
-    sudo -u "$USER_NAME" mv "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" "$THEMES_DIR/"
+    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" "$THEMES_DIR/"
 fi
 
-print_success "Moving icon pack files to $ICONS_DIR/$ICONS_NAME..."
+# Copy icon pack files
+print_success "Copying icon pack files to $ICONS_DIR/$ICONS_NAME..."
 if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
-    sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR/"
+    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR/"
 fi
 
 # Clean up the temporary directory

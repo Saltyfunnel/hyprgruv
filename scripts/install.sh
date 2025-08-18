@@ -194,15 +194,14 @@ sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 
 # Move the cloned files to their final destinations with correct names
 print_success "Moving theme files to $THEMES_DIR/$THEME_NAME..."
-if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme" ]; then
-    # Create the final directory with the correct name and copy contents
-    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/Gruvbox-GTK-Theme" "$THEMES_DIR/$THEME_NAME"
+# The theme is in a subfolder, so we must move the correct one.
+if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" ]; then
+    sudo -u "$USER_NAME" mv "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" "$THEMES_DIR/"
 fi
 
 print_success "Moving icon pack files to $ICONS_DIR/$ICONS_NAME..."
 if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/$ICONS_NAME" ]; then
-    # Copy the specific icon theme directory
-    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/gruvbox-plus-icon-pack/$ICONS_NAME" "$ICONS_DIR"
+    sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-plus-icon-pack/$ICONS_NAME" "$ICONS_DIR"
 fi
 
 # Clean up the temporary directory

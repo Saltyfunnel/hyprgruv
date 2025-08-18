@@ -248,6 +248,8 @@ if sudo -u "$USER_NAME" unzip -o "$ICONS_ZIP" -d "$ICONS_DIR"; then
 else
     print_warning "Failed to unzip Icons. Please check your zip file and the terminal output for clues."
 fi
+# Add an explicit chmod to ensure permissions are correct after unzipping
+sudo -u "$USER_NAME" chmod -R 755 "$ICONS_DIR/Gruvbox"
 print_success "✅ Gruvbox Icons installation completed."
 
 # The key addition: Update the icon cache to ensure icons are found by applications like Thunar.
@@ -339,9 +341,11 @@ fi
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = hyprpaper" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Launch hyprpaper for wallpaper management\nexec-once = hyprpaper" >> "$HYPR_CONF"
 fi
-# Launch waybar
-if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = waybar" "$HYPR_CONF"; then
-    sudo -u "$USER_NAME" echo -e "\n# Launch waybar, the status bar\nexec-once = waybar" >> "$HYPR_CONF"
+# Launch waybar in the background so it doesn't block Hyprland
+if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = waybar &" "$HYPR_CONF"; then
+    # Check for and remove the old line if it exists
+    sudo -u "$USER_NAME" sed -i '/^exec-once = waybar/d' "$HYPR_CONF"
+    sudo -u "$USER_NAME" echo -e "\n# Launch waybar, the status bar\nexec-once = waybar &" >> "$HYPR_CONF"
 fi
 # Launch dunst for notifications
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = dunst" "$HYPR_CONF"; then

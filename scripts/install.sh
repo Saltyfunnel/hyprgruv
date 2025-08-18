@@ -178,59 +178,61 @@ else
     print_warning "starship.toml not found in the source directory. The default configuration will be used."
 fi
 
-
-# --- Setting up GTK themes and icons from local zip files ---
-# IMPORTANT: If you encounter a "permission denied" error here, it's not a bug in the script.
-# It's an issue with your system's /tmp directory. Please run the following command
-# in your terminal before running this script again:
-# sudo chmod 1777 /tmp
-print_header "Setting up GTK themes and icons from local zip files"
+# --- New: Automatic Download of GTK themes and Icons ---
+print_header "Downloading and setting up GTK themes and icons"
+ASSETS_DIR="$SCRIPT_DIR/assets"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
-ASSETS_DIR="$SCRIPT_DIR/assets"
 
-if [ ! -f "$ASSETS_DIR/gruvbox-gtk-master.zip" ]; then
-    print_error "Gruvbox GTK theme archive not found at $ASSETS_DIR/gruvbox-gtk-master.zip. Please download it and place it there."
-fi
-if [ ! -f "$ASSETS_DIR/gruvbox-plus-icon-pack.zip" ]; then
-    print_error "Gruvbox Icons archive not found at $ASSETS_DIR/gruvbox-plus-icon-pack.zip. Please download it and place it there."
-fi
-print_success "✅ Local asset files confirmed."
+# URLs for the theme and icon pack
+GTK_THEME_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme/archive/refs/heads/master.zip"
+ICONS_URL="https://github.com/Fausto-Korpsvart/Gruvbox-Plus-Icon-Pack/archive/refs/heads/master.zip"
 
-# Improved GTK theme installation logic
+# Download the theme
+GTK_THEME_ZIP="$ASSETS_DIR/gruvbox-gtk-master.zip"
+print_success "Downloading Gruvbox GTK theme..."
+if ! sudo -u "$USER_NAME" curl -L -o "$GTK_THEME_ZIP" "$GTK_THEME_URL"; then
+    print_error "Failed to download Gruvbox GTK theme from '$GTK_THEME_URL'."
+fi
+print_success "✅ GTK theme downloaded successfully."
+
+# Download the icon pack
+ICONS_ZIP="$ASSETS_DIR/gruvbox-plus-icon-pack.zip"
+print_success "Downloading Gruvbox Icons..."
+if ! sudo -u "$USER_NAME" curl -L -o "$ICONS_ZIP" "$ICONS_URL"; then
+    print_error "Failed to download Gruvbox Icons from '$ICONS_URL'."
+fi
+print_success "✅ Icons downloaded successfully."
+
+# --- Existing logic for unzipping and installing themes and icons ---
+# Unzip the GTK theme
 print_success "Installing Gruvbox GTK theme..."
-# Clean up any previous install to prevent overwrite errors
-sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk"
-# Unzip the file
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
-if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/gruvbox-gtk-master.zip" -d "$THEMES_DIR" >/dev/null; then
+if sudo -u "$USER_NAME" unzip -o "$GTK_THEME_ZIP" -d "$THEMES_DIR" >/dev/null; then
     # Correctly rename the `gtk-master` folder to `gruvbox-gtk`
-    if [ -d "$THEMES_DIR/Gruvbox-GTK-Theme" ]; then
-        print_success "Renaming 'Gruvbox-GTK-Theme' to 'gruvbox-gtk'..."
-        if ! sudo -u "$USER_NAME" mv "$THEMES_DIR/Gruvbox-GTK-Theme" "$THEMES_DIR/gruvbox-gtk"; then
+    if [ -d "$THEMES_DIR/Gruvbox-GTK-Theme-master" ]; then
+        print_success "Renaming 'Gruvbox-GTK-Theme-master' to 'gruvbox-gtk'..."
+        if ! sudo -u "$USER_NAME" mv "$THEMES_DIR/Gruvbox-GTK-Theme-master" "$THEMES_DIR/gruvbox-gtk"; then
             print_warning "Failed to rename GTK theme folder. Theme may not appear correctly."
         else
             print_success "✅ GTK theme folder renamed to gruvbox-gtk."
         fi
     else
-        print_warning "Expected 'Gruvbox-GTK-Theme' folder not found. Theme may not appear correctly."
+        print_warning "Expected 'Gruvbox-GTK-Theme-master' folder not found after unzip. Theme may not appear correctly."
     fi
 else
     print_warning "Failed to unzip GTK theme. Please check your zip file."
 fi
 print_success "✅ Gruvbox GTK theme installation completed."
 
-# Improved Icons installation logic
+# Unzip the Icons
 print_success "Installing Gruvbox Icons..."
-# Clean up any previous install to prevent overwrite errors
-sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/Gruvbox"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
-# Unzip, but only proceed if the unzip command was successful
-if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/gruvbox-plus-icon-pack.zip" -d "$ICONS_DIR" >/dev/null; then
+if sudo -u "$USER_NAME" unzip -o "$ICONS_ZIP" -d "$ICONS_DIR" >/dev/null; then
     # Find the unzipped folder and rename it correctly
-    ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "gruvbox-plus-icon-pack" | head -n 1)
+    ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "Gruvbox-Plus-Icon-Pack-master" | head -n 1)
     if [ -n "$ACTUAL_ICON_DIR" ] && [ "$(basename "$ACTUAL_ICON_DIR")" != "Gruvbox" ]; then
-        print_success "Renaming '$(basename "$ACTUAL_ICON_DIR")' to '$ICONS_DIR/Gruvbox'..."
+        print_success "Renaming '$(basename "$ACTUAL_ICON_DIR")' to 'Gruvbox'..."
         if ! sudo -u "$USER_NAME" mv "$ACTUAL_ICON_DIR" "$ICONS_DIR/Gruvbox"; then
             print_warning "Failed to rename icon folder. Icons may not appear correctly."
         else

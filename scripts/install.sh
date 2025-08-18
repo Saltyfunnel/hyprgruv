@@ -164,71 +164,54 @@ copy_configs "$SCRIPT_DIR/configs/hypr" "$CONFIG_DIR/hypr" "Hyprland"
 copy_configs "$SCRIPT_DIR/configs/kitty" "$CONFIG_DIR/kitty" "Kitty"
 copy_configs "$SCRIPT_DIR/configs/dunst" "$CONFIG_DIR/dunst" "Dunst"
 
-# --- Setting up GTK themes and icons from local zip files ---
-print_header "Setting up GTK themes and icons from local zip files"
+# --- Setting up GTK themes and icons from their git repositories ---
+print_header "Installing GTK themes and icons"
+
+# --- Variables ---
+THEME_REPO="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
+ICONS_REPO="https://github.com/SylEleuth/gruvbox-plus-icon-pack.git"
+
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
-ASSETS_DIR="$SCRIPT_DIR/assets"
 
-# NOTE: You will need to download the Gruvbox GTK and icon themes and place them in the assets directory.
-# The script expects them to be named like this.
-if [ ! -f "$ASSETS_DIR/gruvbox-gtk-master.zip" ]; then
-    print_error "Gruvbox GTK theme archive not found at $ASSETS_DIR/gruvbox-gtk-master.zip. Please download it and place it there."
-fi
-if [ ! -f "$ASSETS_DIR/Gruvbox.zip" ]; then
-    print_error "Gruvbox Icons archive not found at $ASSETS_DIR/Gruvbox.zip. Please download it and place it there."
-fi
-print_success "✅ Local asset files confirmed."
+# Create a temporary directory for cloning
+TEMP_DIR=$(mktemp -d)
+print_success "Created temporary directory: $TEMP_DIR"
 
-# Improved GTK theme installation logic
-print_success "Installing Gruvbox GTK theme..."
-# Clean up any previous install to prevent overwrite errors
-sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk"
-# Unzip the file
+# Clone the repositories
+print_success "Cloning Gruvbox GTK Theme from $THEME_REPO..."
+sudo -u "$USER_NAME" git clone --depth 1 "$THEME_REPO" "$TEMP_DIR/Gruvbox-GTK-Theme"
+
+print_success "Cloning Gruvbox Plus Icon Pack from $ICONS_REPO..."
+sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-icon-pack"
+
+# Create destination directories if they don't exist
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
-if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/gruvbox-gtk-master.zip" -d "$THEMES_DIR" >/dev/null; then
-    # Correctly rename the `gtk-master` folder to `gruvbox-gtk`
-    if [ -d "$THEMES_DIR/gtk-master" ]; then
-        print_success "Renaming 'gtk-master' to 'gruvbox-gtk'..."
-        if ! sudo -u "$USER_NAME" mv "$THEMES_DIR/gtk-master" "$THEMES_DIR/gruvbox-gtk"; then
-            print_warning "Failed to rename GTK theme folder. Theme may not appear correctly."
-        else
-            print_success "✅ GTK theme folder renamed to gruvbox-gtk."
-        fi
-    else
-        print_warning "Expected 'gtk-master' folder not found. Theme may not appear correctly."
-    fi
-else
-    print_warning "Failed to unzip GTK theme. Please check your zip file."
-fi
-print_success "✅ Gruvbox GTK theme installation completed."
-
-# Improved Icons installation logic
-print_success "Installing Gruvbox Icons..."
-# Clean up any previous install to prevent overwrite errors
-sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/Gruvbox"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
-# Unzip, but only proceed if the unzip command was successful
-if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/Gruvbox.zip" -d "$ICONS_DIR" >/dev/null; then
-    # Find the unzipped folder and rename it correctly
-    ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "*Gruvbox*" | head -n 1)
-    if [ -n "$ACTUAL_ICON_DIR" ] && [ "$(basename "$ACTUAL_ICON_DIR")" != "Gruvbox" ]; then
-        print_success "Renaming '$(basename "$ACTUAL_ICON_DIR")' to '$ICONS_DIR/Gruvbox'..."
-        if ! sudo -u "$USER_NAME" mv "$ACTUAL_ICON_DIR" "$ICONS_DIR/Gruvbox"; then
-            print_warning "Failed to rename icon folder. Icons may not appear correctly."
-        else
-            print_success "✅ Icon folder renamed to Gruvbox."
-        fi
-    fi
-else
-    print_warning "Failed to unzip Icons. Please check your zip file."
+
+# Move the cloned files to their final destinations
+print_success "Moving theme files to $THEMES_DIR..."
+# The GTK theme repo has multiple variants, we'll move the whole folder.
+if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme" ]; then
+    sudo -u "$USER_NAME" mv "$TEMP_DIR/Gruvbox-GTK-Theme"/* "$THEMES_DIR"
 fi
-print_success "✅ Gruvbox Icons installation completed."
+
+print_success "Moving icon pack files to $ICONS_DIR..."
+# The icon pack repo has a specific folder name to move.
+if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
+    sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR"
+fi
+
+# Clean up the temporary directory
+print_success "Cleaning up temporary files..."
+rm -rf "$TEMP_DIR"
+
+print_success "✅ Gruvbox GTK theme and icons installed."
 
 # The key addition: Update the icon cache to ensure icons are found by applications like Thunar.
 if command -v gtk-update-icon-cache &>/dev/null; then
     print_success "Updating the GTK icon cache for a smooth user experience..."
-    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Gruvbox"
+    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Gruvbox-Plus-Dark"
     print_success "✅ GTK icon cache updated successfully."
 else
     print_warning "gtk-update-icon-cache not found. Icons may not appear correctly until a reboot."

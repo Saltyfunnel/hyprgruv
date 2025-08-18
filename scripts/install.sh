@@ -185,10 +185,12 @@ print_success "Created temporary directory: $TEMP_DIR"
 
 # Clone the repositories
 print_success "Cloning Gruvbox GTK Theme from $THEME_REPO..."
-sudo -u "$USER_NAME" git clone --depth 1 "$THEME_REPO" "$TEMP_DIR/Gruvbox-GTK-Theme"
+# Removed --depth 1 to ensure a complete clone
+sudo -u "$USER_NAME" git clone "$THEME_REPO" "$TEMP_DIR/Gruvbox-GTK-Theme"
 
 print_success "Cloning Gruvbox Plus Icon Pack from $ICONS_REPO..."
-sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-icon-pack"
+# Removed --depth 1 to ensure a complete clone
+sudo -u "$USER_NAME" git clone "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-icon-pack"
 
 # Create destination directories if they don't exist
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
@@ -201,12 +203,16 @@ sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 print_success "Copying theme files to $THEMES_DIR/$THEME_NAME..."
 if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" ]; then
     sudo -u "$USER_NAME" cp -r "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" "$THEMES_DIR/"
+else
+    print_warning "Theme directory not found in the cloned repository."
 fi
 
 # Copy icon pack files
 print_success "Copying icon pack files to $ICONS_DIR/$ICONS_NAME..."
 if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
     sudo -u "$USER_NAME" cp -r "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR/"
+else
+    print_warning "Icon directory not found in the cloned repository."
 fi
 
 # Clean up the temporary directory

@@ -87,7 +87,7 @@ print_header "Starting System-Level Setup"
 if [ "$CONFIRMATION" == "yes" ]; then
     read -p "Update system and install packages? Press Enter to continue..."
 fi
-# ADDED 'gnome-themes-extra' and 'adwaita-qt' to ensure all GTK variants have a fallback theme
+# The adwaita-qt package has been removed as it is no longer in the official repositories.
 PACKAGES=(
     git base-devel pipewire wireplumber pamixer brightnessctl
     ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-fira-code ttf-fira-mono
@@ -95,7 +95,7 @@ PACKAGES=(
     thunar thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer file-roller
     gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome
     waybar hyprland hyprpaper hypridle hyprlock starship fastfetch
-    gnome-themes-extra adwaita-qt # Added packages
+    gnome-themes-extra
 )
 if ! pacman -Syu "${PACKAGES[@]:-}" --noconfirm; then
     print_error "Failed to install system packages."
@@ -202,7 +202,6 @@ if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme/themes/Gruvbox-Dark" ]; then
 fi
 
 print_success "Moving icon pack files to $ICONS_DIR/$ICONS_NAME..."
-# MODIFIED: Changed the source path to match the repository's structure
 if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
     sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR/"
 fi
@@ -214,7 +213,6 @@ rm -rf "$TEMP_DIR"
 print_success "✅ Gruvbox GTK theme and icons installed."
 
 # The key addition: Update the icon cache to ensure icons are found by applications like Thunar.
-# ADDED: A check to ensure the icon directory exists before trying to update the cache
 if [ -d "$ICONS_DIR/$ICONS_NAME" ]; then
     if command -v gtk-update-icon-cache &>/dev/null; then
         print_success "Updating the GTK icon cache for a smooth user experience..."
@@ -231,11 +229,9 @@ GTK3_CONFIG="$CONFIG_DIR/gtk-3.0"
 GTK4_CONFIG="$CONFIG_DIR/gtk-4.0"
 sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
 
-# Note the corrected GTK theme name
 GTK_SETTINGS="[Settings]\ngtk-theme-name=$THEME_NAME\ngtk-icon-theme-name=$ICONS_NAME\ngtk-font-name=JetBrainsMono 10"
 sudo -u "$USER_NAME" bash -c "echo -e \"$GTK_SETTINGS\" | tee \"$GTK3_CONFIG/settings.ini\" \"$GTK4_CONFIG/settings.ini\" >/dev/null"
 
-# ADDED: A final check for the gsettings command and a confirmation message.
 if command -v gsettings &>/dev/null; then
     print_success "Using gsettings to apply GTK themes."
     sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "$THEME_NAME"
@@ -255,23 +251,17 @@ env = ICON_THEME,Gruvbox-Plus-Dark
 env = XDG_CURRENT_DESKTOP,Hyprland
 EOF_HYPR_VARS
 
-# We are going to make sure that the hyprland.conf file sources all of the necessary configs that we are providing,
-# and also launches the required apps that we installed with pacman.
 print_header "Updating hyprland.conf with necessary 'exec-once' commands"
 HYPR_CONF="$CONFIG_DIR/hypr/hyprland.conf"
-# Sourced by the setup script to set GTK and icon themes
 if [ -f "$HYPR_CONF" ] && ! grep -q "source = $HYPR_VARS_FILE" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Sourced by the setup script to set GTK and icon themes\nsource = $HYPR_VARS_FILE" >> "$HYPR_CONF"
 fi
-# Launch waybar
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = waybar" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Launch waybar, the status bar\nexec-once = waybar" >> "$HYPR_CONF"
 fi
-# Launch dunst for notifications
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = dunst" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Launch dunst, the notification daemon\nexec-once = dunst" >> "$HYPR_CONF"
 fi
-# Launch hypridle for power management and locking
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = hypridle" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Launch hypridle for power management and locking\nexec-once = hypridle" >> "$HYPR_CONF"
 fi
@@ -301,14 +291,12 @@ EOF_UCA
 fi
 print_success "✅ Thunar action configured."
 
-# ADDED: Gracefully kill Thunar and restart to ensure it picks up changes
 print_header "Applying theme changes to Thunar..."
 sudo -u "$USER_NAME" pkill thunar &>/dev/null || true
 print_success "✅ Existing Thunar processes killed."
 sudo -u "$USER_NAME" thunar & disown &>/dev/null
 print_success "✅ Thunar restarted in the background to apply new theme."
 
-# ADDED: Final verification step to confirm theme is applied
 print_header "Verification of theme application"
 print_success "Checking for theme files..."
 if [ ! -d "$THEMES_DIR/$THEME_NAME" ] || [ ! -d "$ICONS_DIR/$ICONS_NAME" ]; then

@@ -93,7 +93,7 @@ PACKAGES=(
     sddm kitty nano tar unzip gnome-disk-utility code mpv dunst pacman-contrib exo firefox cava steam
     thunar thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer file-roller
     gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome
-    waybar hyprland hyprpaper hypridle hyprlock starship fastfetch
+    waybar hyprland hyprpaper hypridle hyprlock starship fastfetch wofi
 )
 if ! pacman -Syu "${PACKAGES[@]:-}" --noconfirm; then
     print_error "Failed to install system packages."
@@ -163,55 +163,89 @@ copy_configs "$SCRIPT_DIR/configs/waybar" "$CONFIG_DIR/waybar" "Waybar"
 copy_configs "$SCRIPT_DIR/configs/hypr" "$CONFIG_DIR/hypr" "Hyprland"
 copy_configs "$SCRIPT_DIR/configs/kitty" "$CONFIG_DIR/kitty" "Kitty"
 copy_configs "$SCRIPT_DIR/configs/dunst" "$CONFIG_DIR/dunst" "Dunst"
+copy_configs "$SCRIPT_DIR/configs/fastfetch" "$CONFIG_DIR/fastfetch" "Fastfetch"
+copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
 
-# --- Setting up GTK themes and icons from their git repositories ---
-print_header "Installing GTK themes and icons"
+# Copy the starship.toml file to the root of the .config directory
+print_success "Copying starship.toml to $CONFIG_DIR/starship.toml"
+if [ -f "$SCRIPT_DIR/configs/starship/starship.toml" ]; then
+    if sudo -u "$USER_NAME" cp "$SCRIPT_DIR/configs/starship/starship.toml" "$CONFIG_DIR/starship.toml"; then
+        print_success "✅ Copied starship.toml to ~/.config/starship.toml."
+    else
+        print_warning "Failed to copy starship.toml. The default configuration will be used."
+    fi
+else
+    print_warning "starship.toml not found in the source directory. The default configuration will be used."
+fi
 
-# --- Variables ---
-THEME_REPO="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
-ICONS_REPO="https://github.com/SylEleuth/gruvbox-plus-icon-pack.git"
 
+# --- Setting up GTK themes and icons from local zip files ---
+# IMPORTANT: If you encounter a "permission denied" error here, it's not a bug in the script.
+# It's an issue with your system's /tmp directory. Please run the following command
+# in your terminal before running this script again:
+# sudo chmod 1777 /tmp
+print_header "Setting up GTK themes and icons from local zip files"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
+ASSETS_DIR="$SCRIPT_DIR/assets"
 
-# Create a temporary directory for cloning
-TEMP_DIR=$(mktemp -d)
-print_success "Created temporary directory: $TEMP_DIR"
+if [ ! -f "$ASSETS_DIR/gruvbox-gtk-master.zip" ]; then
+    print_error "Gruvbox GTK theme archive not found at $ASSETS_DIR/gruvbox-gtk-master.zip. Please download it and place it there."
+fi
+if [ ! -f "$ASSETS_DIR/gruvbox-plus-icon-pack.zip" ]; then
+    print_error "Gruvbox Icons archive not found at $ASSETS_DIR/gruvbox-plus-icon-pack.zip. Please download it and place it there."
+fi
+print_success "✅ Local asset files confirmed."
 
-# Clone the repositories
-print_success "Cloning Gruvbox GTK Theme from $THEME_REPO..."
-sudo -u "$USER_NAME" git clone --depth 1 "$THEME_REPO" "$TEMP_DIR/Gruvbox-GTK-Theme"
-
-print_success "Cloning Gruvbox Plus Icon Pack from $ICONS_REPO..."
-sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-icon-pack"
-
-# Create destination directories if they don't exist
+# Improved GTK theme installation logic
+print_success "Installing Gruvbox GTK theme..."
+# Clean up any previous install to prevent overwrite errors
+sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk"
+# Unzip the file
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
+if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/gruvbox-gtk-master.zip" -d "$THEMES_DIR" >/dev/null; then
+    # Correctly rename the `gtk-master` folder to `gruvbox-gtk`
+    if [ -d "$THEMES_DIR/Gruvbox-GTK-Theme" ]; then
+        print_success "Renaming 'Gruvbox-GTK-Theme' to 'gruvbox-gtk'..."
+        if ! sudo -u "$USER_NAME" mv "$THEMES_DIR/Gruvbox-GTK-Theme" "$THEMES_DIR/gruvbox-gtk"; then
+            print_warning "Failed to rename GTK theme folder. Theme may not appear correctly."
+        else
+            print_success "✅ GTK theme folder renamed to gruvbox-gtk."
+        fi
+    else
+        print_warning "Expected 'Gruvbox-GTK-Theme' folder not found. Theme may not appear correctly."
+    fi
+else
+    print_warning "Failed to unzip GTK theme. Please check your zip file."
+fi
+print_success "✅ Gruvbox GTK theme installation completed."
+
+# Improved Icons installation logic
+print_success "Installing Gruvbox Icons..."
+# Clean up any previous install to prevent overwrite errors
+sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/Gruvbox"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
-
-# Move the cloned files to their final destinations
-print_success "Moving theme files to $THEMES_DIR..."
-# The GTK theme repo has multiple variants, we'll move the whole folder.
-if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme" ]; then
-    sudo -u "$USER_NAME" mv "$TEMP_DIR/Gruvbox-GTK-Theme"/* "$THEMES_DIR"
+# Unzip, but only proceed if the unzip command was successful
+if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/gruvbox-plus-icon-pack.zip" -d "$ICONS_DIR" >/dev/null; then
+    # Find the unzipped folder and rename it correctly
+    ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "gruvbox-plus-icon-pack" | head -n 1)
+    if [ -n "$ACTUAL_ICON_DIR" ] && [ "$(basename "$ACTUAL_ICON_DIR")" != "Gruvbox" ]; then
+        print_success "Renaming '$(basename "$ACTUAL_ICON_DIR")' to '$ICONS_DIR/Gruvbox'..."
+        if ! sudo -u "$USER_NAME" mv "$ACTUAL_ICON_DIR" "$ICONS_DIR/Gruvbox"; then
+            print_warning "Failed to rename icon folder. Icons may not appear correctly."
+        else
+            print_success "✅ Icon folder renamed to Gruvbox."
+        fi
+    fi
+else
+    print_warning "Failed to unzip Icons. Please check your zip file."
 fi
-
-print_success "Moving icon pack files to $ICONS_DIR..."
-# The icon pack repo has a specific folder name to move.
-if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
-    sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR"
-fi
-
-# Clean up the temporary directory
-print_success "Cleaning up temporary files..."
-rm -rf "$TEMP_DIR"
-
-print_success "✅ Gruvbox GTK theme and icons installed."
+print_success "✅ Gruvbox Icons installation completed."
 
 # The key addition: Update the icon cache to ensure icons are found by applications like Thunar.
 if command -v gtk-update-icon-cache &>/dev/null; then
     print_success "Updating the GTK icon cache for a smooth user experience..."
-    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Gruvbox-Plus-Dark"
+    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Gruvbox"
     print_success "✅ GTK icon cache updated successfully."
 else
     print_warning "gtk-update-icon-cache not found. Icons may not appear correctly until a reboot."
@@ -224,15 +258,64 @@ sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
 GTK_SETTINGS="[Settings]\ngtk-theme-name=gruvbox-gtk\ngtk-icon-theme-name=Gruvbox\ngtk-font-name=JetBrainsMono 10"
 sudo -u "$USER_NAME" bash -c "echo -e \"$GTK_SETTINGS\" | tee \"$GTK3_CONFIG/settings.ini\" \"$GTK4_CONFIG/settings.ini\" >/dev/null"
 
-if command -v gsettings &>/dev/null; then
-    print_success "Using gsettings to apply GTK themes."
-    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "gruvbox-gtk"
-    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "Gruvbox"
-    print_success "✅ Themes applied with gsettings."
+# --- New, robust block to handle gsettings and Thunar restart ---
+print_header "Applying GTK themes with gsettings and restarting Thunar"
+sudo -u "$USER_NAME" bash <<EOF_GSETTINGS
+    set -euo pipefail
+    
+    # Get the user's UID and DBUS path in the correct context
+    USER_UID=$(id -u)
+    DBUS_PATH="unix:path=/run/user/${USER_UID}/bus"
+    
+    # GSettings commands
+    if command -v gsettings &>/dev/null; then
+        echo 'Using gsettings to apply GTK themes.'
+        env DBUS_SESSION_BUS_ADDRESS="${DBUS_PATH}" gsettings set org.gnome.desktop.interface gtk-theme "gruvbox-gtk"
+        env DBUS_SESSION_BUS_ADDRESS="${DBUS_PATH}" gsettings set org.gnome.desktop.interface icon-theme "Gruvbox"
+        echo '✅ Themes applied with gsettings.'
+    else
+        echo 'gsettings not found. Themes may not apply correctly to all applications.'
+    fi
+    
+    # Thunar restart commands
+    if command -v thunar &>/dev/null; then
+        echo 'Restarting Thunar to apply changes'
+        env DBUS_SESSION_BUS_ADDRESS="${DBUS_PATH}" pkill thunar || true
+        env DBUS_SESSION_BUS_ADDRESS="${DBUS_PATH}" thunar &
+        echo '✅ Thunar restarted successfully.'
+    else
+        echo 'Thunar not found, skipping restart.'
+    fi
+EOF_GSETTINGS
+# --- End of new block ---
+
+# Configure starship and fastfetch prompt
+print_header "Configuring Starship and Fastfetch prompt"
+if [ -f "$USER_HOME/.bashrc" ]; then
+    # Starship
+    if ! sudo -u "$USER_NAME" grep -q "eval \"\$(starship init bash)\"" "$USER_HOME/.bashrc"; then
+        sudo -u "$USER_NAME" echo -e "\n# Starship prompt\neval \"\$(starship init bash)\"" >> "$USER_HOME/.bashrc"
+        print_success "✅ Added starship to .bashrc."
+    else
+        print_success "✅ Starship already configured in .bashrc, skipping."
+    fi
+
+    # Fastfetch
+    if ! sudo -u "$USER_NAME" grep -q "fastfetch" "$USER_HOME/.bashrc"; then
+        sudo -u "$USER_NAME" echo -e "\n# Run fastfetch on terminal startup\nfastfetch" >> "$USER_HOME/.bashrc"
+        print_success "✅ Added fastfetch to .bashrc."
+    else
+        print_success "✅ Fastfetch already configured in .bashrc, skipping."
+    fi
 else
-    print_warning "gsettings not found. Themes may not apply correctly to all applications."
+    print_warning ".bashrc not found, skipping starship and fastfetch configuration. Please add them to your shell's config file."
 fi
 
+# We are going to make sure that the hyprland.conf file sources all of the necessary configs that we are providing,
+# and also launches the required apps that we installed with pacman.
+print_header "Updating hyprland.conf with necessary 'exec-once' commands and keybindings"
+HYPR_CONF="$CONFIG_DIR/hypr/hyprland.conf"
+# Sourced by the setup script to set GTK and icon themes
 HYPR_VARS_FILE="$CONFIG_DIR/hypr/hypr-vars.conf"
 sudo -u "$USER_NAME" tee "$HYPR_VARS_FILE" >/dev/null <<'EOF_HYPR_VARS'
 # Set GTK theme and icon theme
@@ -241,12 +324,6 @@ env = ICON_THEME,Gruvbox
 # Set XDG desktop to Hyprland
 env = XDG_CURRENT_DESKTOP,Hyprland
 EOF_HYPR_VARS
-
-# We are going to make sure that the hyprland.conf file sources all of the necessary configs that we are providing,
-# and also launches the required apps that we installed with pacman.
-print_header "Updating hyprland.conf with necessary 'exec-once' commands"
-HYPR_CONF="$CONFIG_DIR/hypr/hyprland.conf"
-# Sourced by the setup script to set GTK and icon themes
 if [ -f "$HYPR_CONF" ] && ! grep -q "source = $HYPR_VARS_FILE" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Sourced by the setup script to set GTK and icon themes\nsource = $HYPR_VARS_FILE" >> "$HYPR_CONF"
 fi
@@ -266,7 +343,11 @@ fi
 if [ -f "$HYPR_CONF" ] && ! grep -q "exec-once = hypridle" "$HYPR_CONF"; then
     sudo -u "$USER_NAME" echo -e "\n# Launch hypridle for power management and locking\nexec-once = hypridle" >> "$HYPR_CONF"
 fi
-print_success "✅ hyprland.conf updated with core components."
+# Wofi Keybinding
+if [ -f "$HYPR_CONF" ] && ! grep -q "bind = \$mainMod, D, exec, wofi --show drun" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Wofi App Launcher keybinding\nbind = \$mainMod, D, exec, wofi --show drun" >> "$HYPR_CONF"
+fi
+print_success "✅ hyprland.conf updated with core components and keybindings."
 
 
 print_header "Creating backgrounds directory"

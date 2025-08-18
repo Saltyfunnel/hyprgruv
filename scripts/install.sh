@@ -204,7 +204,8 @@ sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-gtk" "$THEMES_DIR/gruvbox-gtk"
 print_success "✅ Gruvbox GTK theme installation completed."
 
 # Clone the icon pack
-ICONS_REPO="https://github.com/Fausto-Korpsvart/Gruvbox-Plus-Icon-Pack.git"
+# CHANGED REPOSITORY TO A DIFFERENT GRUVBOX ICON PACK.
+ICONS_REPO="https://github.com/telmo-g/gruvbox-icons.git"
 print_success "Cloning Gruvbox Icons..."
 if ! sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/Gruvbox"; then
     print_error "Failed to clone Gruvbox Icons from '$ICONS_REPO'."

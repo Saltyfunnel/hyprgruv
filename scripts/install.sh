@@ -190,18 +190,18 @@ sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-i
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 
-# Move the cloned files to their final destinations
+# Move the cloned files to their final destinations using a safer copy method
 print_success "Moving theme files to $THEMES_DIR..."
-# The GTK theme repo has multiple variants, we'll move the whole folder.
 if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme" ]; then
-    # Use find to copy all contents to the target directory
-    sudo -u "$USER_NAME" find "$TEMP_DIR/Gruvbox-GTK-Theme" -maxdepth 1 -mindepth 1 -exec cp -r "{}" "$THEMES_DIR" \;
+    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/Gruvbox-GTK-Theme/"* "$THEMES_DIR"
 fi
 
 print_success "Moving icon pack files to $ICONS_DIR..."
-# The icon pack repo has a specific folder name to move.
+# Ensure the destination directory for the icon pack exists
+sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
-    sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR"
+    # Copy the specific icon theme directory
+    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR"
 fi
 
 # Clean up the temporary directory

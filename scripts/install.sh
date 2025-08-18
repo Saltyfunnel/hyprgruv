@@ -178,8 +178,8 @@ else
     print_warning "starship.toml not found in the source directory. The default configuration will be used."
 fi
 
-# --- Automatic Download of GTK themes and Icons with Git ---
-print_header "Downloading and setting up GTK themes and icons with Git"
+# --- Automatic Download of GTK themes and Icons with Git and Curl ---
+print_header "Downloading and setting up GTK themes and icons with Git and Curl"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
 TEMP_DIR="/tmp/gruvbox-setup"
@@ -189,7 +189,7 @@ print_success "Cleaning up old theme, icon, and temporary directories..."
 sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk" "$ICONS_DIR/Gruvbox" "$TEMP_DIR"
 print_success "✅ Old directories removed."
 
-# Clone the GTK theme
+# Clone the GTK theme using git
 GTK_THEME_REPO="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
 print_success "Cloning Gruvbox GTK theme..."
 if ! sudo -u "$USER_NAME" git clone --depth 1 "$GTK_THEME_REPO" "$TEMP_DIR/gruvbox-gtk"; then
@@ -203,19 +203,22 @@ sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
 sudo -u "$USER_NAME" mv "$TEMP_DIR/gruvbox-gtk" "$THEMES_DIR/gruvbox-gtk"
 print_success "✅ Gruvbox GTK theme installation completed."
 
-# Clone the icon pack
-# CHANGED REPOSITORY TO A DIFFERENT GRUVBOX ICON PACK.
-ICONS_REPO="https://github.com/telmo-g/gruvbox-icons.git"
-print_success "Cloning Gruvbox Icons..."
-if ! sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/Gruvbox"; then
-    print_error "Failed to clone Gruvbox Icons from '$ICONS_REPO'."
+# Download and unzip the icon pack using curl
+ICONS_ZIP_URL="https://github.com/telmo-g/gruvbox-icons/archive/refs/heads/main.zip"
+ICONS_REPO_NAME="gruvbox-icons-main"
+print_success "Downloading and unzipping Gruvbox Icons..."
+if ! sudo -u "$USER_NAME" curl -L "$ICONS_ZIP_URL" -o "$TEMP_DIR/gruvbox-icons.zip"; then
+    print_error "Failed to download Gruvbox Icons from '$ICONS_ZIP_URL'."
 fi
-print_success "✅ Icons cloned successfully."
+if ! sudo -u "$USER_NAME" unzip -q "$TEMP_DIR/gruvbox-icons.zip" -d "$TEMP_DIR"; then
+    print_error "Failed to unzip the Gruvbox Icons file."
+fi
+print_success "✅ Icons downloaded and unzipped successfully."
 
 # Move the icon pack to its final location
 print_success "Installing Gruvbox Icons..."
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
-sudo -u "$USER_NAME" mv "$TEMP_DIR/Gruvbox" "$ICONS_DIR/Gruvbox"
+sudo -u "$USER_NAME" mv "$TEMP_DIR/$ICONS_REPO_NAME" "$ICONS_DIR/Gruvbox"
 print_success "✅ Gruvbox Icons installation completed."
 
 # Update the icon cache to ensure icons are found by applications like Thunar.

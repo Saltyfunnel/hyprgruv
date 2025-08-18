@@ -1,0 +1,112 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "$(find \"${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch/pngs/\" -name \"*.png\" | sort -R | head -1)",
+    "height": 28,
+    "padding": { "top": 3, "right": 4, "bottom": 1, "left": 4 }
+  },
+  "display": {
+    "separator": "\u001b[38;2;248;248;242m : "
+  },
+  "modules": [
+    {
+      "type": "custom",
+      "format": "  \u001b[38;2;189;147;249m               "
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "custom",
+      "format": "  \u001b[38;2;80;250;123m   My conscience is clean — I have never used it.  "
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "os",
+      "key": "\u001b[38;2;139;233;253m   OS"
+    },
+    {
+      "type": "kernel",
+      "key": "\u001b[38;2;189;147;249m   Kernel"
+    },
+    {
+      "type": "packages",
+      "key": "\u001b[38;2;139;233;253m  󰏗 Packages"
+    },
+    {
+      "type": "display",
+      "key": "\u001b[38;2;255;184;108m  󱍜 Display"
+    },
+    {
+      "type": "wm",
+      "key": "\u001b[38;2;189;147;249m   WM"
+    },
+    {
+      "type": "terminal",
+      "key": "\u001b[38;2;80;250;123m   Terminal"
+    },
+    {
+      "type": "media",
+      "key": "\u001b[38;2;139;233;253m  󰝚 Music"
+    },
+    {
+      "type": "command",
+      "key": "\u001b[38;2;255;184;108m  󱦟 OS Age",
+      "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
+    },
+    {
+      "type": "uptime",
+      "key": "\u001b[38;2;139;233;253m  "
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;255;121;198m  󰊤 GitHub : Saltyfunnel"
+    },
+    {
+      "type": "battery",
+      "key": "\u001b[38;2;255;184;108m   Battery"
+    },
+    "break",
+    {
+      "type": "title",
+      "key": "\u001b[38;2;189;147;249m   User"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "cpu",
+      "format": "{1}",
+      "keyColor": "\u001b[38;2;189;147;249m"
+    },
+    {
+      "type": "gpu",
+      "format": "{2}",
+      "keyColor": "\u001b[38;2;139;233;253m"
+    },
+    {
+      "type": "gpu",
+      "format": "{3}",
+      "keyColor": "\u001b[38;2;255;184;108m"
+    },
+    {
+      "type": "memory",
+      "key": "\u001b[38;2;189;147;249m   Memory"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "  \u001b[38;2;189;147;249m               "
+    },
+    "break"
+  ]
+}

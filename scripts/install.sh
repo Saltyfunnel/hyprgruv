@@ -173,6 +173,8 @@ ICONS_REPO="https://github.com/SylEleuth/gruvbox-plus-icon-pack.git"
 
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
+THEME_NAME="Gruvbox-Dark"
+ICONS_NAME="Gruvbox-Plus-Dark"
 
 # Create a temporary directory for cloning
 print_success "Creating temporary directory..."
@@ -190,18 +192,17 @@ sudo -u "$USER_NAME" git clone --depth 1 "$ICONS_REPO" "$TEMP_DIR/gruvbox-plus-i
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 
-# Move the cloned files to their final destinations using a safer copy method
-print_success "Moving theme files to $THEMES_DIR..."
+# Move the cloned files to their final destinations with correct names
+print_success "Moving theme files to $THEMES_DIR/$THEME_NAME..."
 if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme" ]; then
-    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/Gruvbox-GTK-Theme/"* "$THEMES_DIR"
+    # Create the final directory with the correct name and copy contents
+    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/Gruvbox-GTK-Theme" "$THEMES_DIR/$THEME_NAME"
 fi
 
-print_success "Moving icon pack files to $ICONS_DIR..."
-# Ensure the destination directory for the icon pack exists
-sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
-if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" ]; then
+print_success "Moving icon pack files to $ICONS_DIR/$ICONS_NAME..."
+if [ -d "$TEMP_DIR/gruvbox-plus-icon-pack/$ICONS_NAME" ]; then
     # Copy the specific icon theme directory
-    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR"
+    sudo -u "$USER_NAME" cp -r "$TEMP_DIR/gruvbox-plus-icon-pack/$ICONS_NAME" "$ICONS_DIR"
 fi
 
 # Clean up the temporary directory
@@ -213,7 +214,7 @@ print_success "✅ Gruvbox GTK theme and icons installed."
 # The key addition: Update the icon cache to ensure icons are found by applications like Thunar.
 if command -v gtk-update-icon-cache &>/dev/null; then
     print_success "Updating the GTK icon cache for a smooth user experience..."
-    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Gruvbox-Plus-Dark"
+    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/$ICONS_NAME"
     print_success "✅ GTK icon cache updated successfully."
 else
     print_warning "gtk-update-icon-cache not found. Icons may not appear correctly until a reboot."
@@ -224,13 +225,13 @@ GTK4_CONFIG="$CONFIG_DIR/gtk-4.0"
 sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
 
 # Note the corrected GTK theme name
-GTK_SETTINGS="[Settings]\ngtk-theme-name=Gruvbox-Dark\ngtk-icon-theme-name=Gruvbox-Plus-Dark\ngtk-font-name=JetBrainsMono 10"
+GTK_SETTINGS="[Settings]\ngtk-theme-name=$THEME_NAME\ngtk-icon-theme-name=$ICONS_NAME\ngtk-font-name=JetBrainsMono 10"
 sudo -u "$USER_NAME" bash -c "echo -e \"$GTK_SETTINGS\" | tee \"$GTK3_CONFIG/settings.ini\" \"$GTK4_CONFIG/settings.ini\" >/dev/null"
 
 if command -v gsettings &>/dev/null; then
     print_success "Using gsettings to apply GTK themes."
-    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "Gruvbox-Dark"
-    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "Gruvbox-Plus-Dark"
+    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "$THEME_NAME"
+    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "$ICONS_NAME"
     print_success "✅ Themes applied with gsettings."
 else
     print_warning "gsettings not found. Themes may not apply correctly to all applications."

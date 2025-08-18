@@ -188,6 +188,11 @@ ICONS_DIR="$USER_HOME/.icons"
 GTK_THEME_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme/archive/refs/heads/master.zip"
 ICONS_URL="https://github.com/Fausto-Korpsvart/Gruvbox-Plus-Icon-Pack/archive/refs/heads/master.zip"
 
+# Clean up old downloads
+print_success "Cleaning up old theme and icon archives..."
+sudo -u "$USER_NAME" rm -f "$ASSETS_DIR/gruvbox-gtk-master.zip" "$ASSETS_DIR/gruvbox-plus-icon-pack.zip"
+print_success "✅ Old archives removed."
+
 # Download the theme
 GTK_THEME_ZIP="$ASSETS_DIR/gruvbox-gtk-master.zip"
 print_success "Downloading Gruvbox GTK theme..."
@@ -228,7 +233,8 @@ print_success "✅ Gruvbox GTK theme installation completed."
 # Unzip the Icons
 print_success "Installing Gruvbox Icons..."
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
-if sudo -u "$USER_NAME" unzip -o "$ICONS_ZIP" -d "$ICONS_DIR" >/dev/null; then
+# NOTE: Removed `>/dev/null` to show the output of the unzip command for debugging.
+if sudo -u "$USER_NAME" unzip -o "$ICONS_ZIP" -d "$ICONS_DIR"; then
     # Find the unzipped folder and rename it correctly
     ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "Gruvbox-Plus-Icon-Pack-master" | head -n 1)
     if [ -n "$ACTUAL_ICON_DIR" ] && [ "$(basename "$ACTUAL_ICON_DIR")" != "Gruvbox" ]; then
@@ -240,7 +246,7 @@ if sudo -u "$USER_NAME" unzip -o "$ICONS_ZIP" -d "$ICONS_DIR" >/dev/null; then
         fi
     fi
 else
-    print_warning "Failed to unzip Icons. Please check your zip file."
+    print_warning "Failed to unzip Icons. Please check your zip file and the terminal output for clues."
 fi
 print_success "✅ Gruvbox Icons installation completed."
 

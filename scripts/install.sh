@@ -92,7 +92,7 @@ PACKAGES=(
     ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-fira-code ttf-fira-mono
     sddm kitty nano tar unzip gnome-disk-utility code mpv dunst pacman-contrib exo firefox cava steam
     thunar thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer file-roller
-    gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome
+    gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome gtk-engine-murrine
     waybar hyprland hyprpaper hypridle hyprlock starship fastfetch wofi
 )
 if ! pacman -Syu "${PACKAGES[@]:-}" --noconfirm; then

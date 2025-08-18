@@ -29,7 +29,7 @@
 
 /* Transparent bar background */
 window#waybar {
-    background: @gruvbox-background;
+    background: rgba(0, 0, 0, 0);
     color: @gruvbox-foreground;
 }
 

@@ -178,7 +178,7 @@ else
     print_warning "starship.toml not found in the source directory. The default configuration will be used."
 fi
 
-# --- New: Automatic Download of GTK themes and Icons with Git ---
+# --- Automatic Download of GTK themes and Icons with Git ---
 print_header "Downloading and setting up GTK themes and icons with Git"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"

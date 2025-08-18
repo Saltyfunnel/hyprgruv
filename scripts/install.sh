@@ -1,5 +1,5 @@
 #!/bin/bash
-# A one-stop script for installing a Dracula-themed Hyprland setup on Arch Linux.
+# A one-stop script for installing a Gruvbox-themed Hyprland setup on Arch Linux.
 # This script handles both system-level and user-level tasks in a single run,
 # using only official Arch Linux repositories via pacman.
 set -euo pipefail
@@ -170,28 +170,30 @@ THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
 ASSETS_DIR="$SCRIPT_DIR/assets"
 
-if [ ! -f "$ASSETS_DIR/dracula-gtk-master.zip" ]; then
-    print_error "Dracula GTK theme archive not found at $ASSETS_DIR/dracula-gtk-master.zip. Please download it and place it there."
+# NOTE: You will need to download the Gruvbox GTK and icon themes and place them in the assets directory.
+# The script expects them to be named like this.
+if [ ! -f "$ASSETS_DIR/gruvbox-gtk-master.zip" ]; then
+    print_error "Gruvbox GTK theme archive not found at $ASSETS_DIR/gruvbox-gtk-master.zip. Please download it and place it there."
 fi
-if [ ! -f "$ASSETS_DIR/Dracula.zip" ]; then
-    print_error "Dracula Icons archive not found at $ASSETS_DIR/Dracula.zip. Please download it and place it there."
+if [ ! -f "$ASSETS_DIR/Gruvbox.zip" ]; then
+    print_error "Gruvbox Icons archive not found at $ASSETS_DIR/Gruvbox.zip. Please download it and place it there."
 fi
 print_success "✅ Local asset files confirmed."
 
 # Improved GTK theme installation logic
-print_success "Installing Dracula GTK theme..."
+print_success "Installing Gruvbox GTK theme..."
 # Clean up any previous install to prevent overwrite errors
-sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/dracula-gtk"
+sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk"
 # Unzip the file
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR"
-if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/dracula-gtk-master.zip" -d "$THEMES_DIR" >/dev/null; then
-    # Correctly rename the `gtk-master` folder to `dracula-gtk`
+if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/gruvbox-gtk-master.zip" -d "$THEMES_DIR" >/dev/null; then
+    # Correctly rename the `gtk-master` folder to `gruvbox-gtk`
     if [ -d "$THEMES_DIR/gtk-master" ]; then
-        print_success "Renaming 'gtk-master' to 'dracula-gtk'..."
-        if ! sudo -u "$USER_NAME" mv "$THEMES_DIR/gtk-master" "$THEMES_DIR/dracula-gtk"; then
+        print_success "Renaming 'gtk-master' to 'gruvbox-gtk'..."
+        if ! sudo -u "$USER_NAME" mv "$THEMES_DIR/gtk-master" "$THEMES_DIR/gruvbox-gtk"; then
             print_warning "Failed to rename GTK theme folder. Theme may not appear correctly."
         else
-            print_success "✅ GTK theme folder renamed to dracula-gtk."
+            print_success "✅ GTK theme folder renamed to gruvbox-gtk."
         fi
     else
         print_warning "Expected 'gtk-master' folder not found. Theme may not appear correctly."
@@ -199,34 +201,34 @@ if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/dracula-gtk-master.zip" -d "$THEME
 else
     print_warning "Failed to unzip GTK theme. Please check your zip file."
 fi
-print_success "✅ Dracula GTK theme installation completed."
+print_success "✅ Gruvbox GTK theme installation completed."
 
 # Improved Icons installation logic
-print_success "Installing Dracula Icons..."
+print_success "Installing Gruvbox Icons..."
 # Clean up any previous install to prevent overwrite errors
-sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/Dracula"
+sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/Gruvbox"
 sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 # Unzip, but only proceed if the unzip command was successful
-if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/Dracula.zip" -d "$ICONS_DIR" >/dev/null; then
+if sudo -u "$USER_NAME" unzip -o "$ASSETS_DIR/Gruvbox.zip" -d "$ICONS_DIR" >/dev/null; then
     # Find the unzipped folder and rename it correctly
-    ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "*Dracula*" | head -n 1)
-    if [ -n "$ACTUAL_ICON_DIR" ] && [ "$(basename "$ACTUAL_ICON_DIR")" != "Dracula" ]; then
-        print_success "Renaming '$(basename "$ACTUAL_ICON_DIR")' to '$ICONS_DIR/Dracula'..."
-        if ! sudo -u "$USER_NAME" mv "$ACTUAL_ICON_DIR" "$ICONS_DIR/Dracula"; then
+    ACTUAL_ICON_DIR=$(sudo -u "$USER_NAME" find "$ICONS_DIR" -maxdepth 1 -mindepth 1 -type d -name "*Gruvbox*" | head -n 1)
+    if [ -n "$ACTUAL_ICON_DIR" ] && [ "$(basename "$ACTUAL_ICON_DIR")" != "Gruvbox" ]; then
+        print_success "Renaming '$(basename "$ACTUAL_ICON_DIR")' to '$ICONS_DIR/Gruvbox'..."
+        if ! sudo -u "$USER_NAME" mv "$ACTUAL_ICON_DIR" "$ICONS_DIR/Gruvbox"; then
             print_warning "Failed to rename icon folder. Icons may not appear correctly."
         else
-            print_success "✅ Icon folder renamed to Dracula."
+            print_success "✅ Icon folder renamed to Gruvbox."
         fi
     fi
 else
     print_warning "Failed to unzip Icons. Please check your zip file."
 fi
-print_success "✅ Dracula Icons installation completed."
+print_success "✅ Gruvbox Icons installation completed."
 
 # The key addition: Update the icon cache to ensure icons are found by applications like Thunar.
 if command -v gtk-update-icon-cache &>/dev/null; then
     print_success "Updating the GTK icon cache for a smooth user experience..."
-    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Dracula"
+    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/Gruvbox"
     print_success "✅ GTK icon cache updated successfully."
 else
     print_warning "gtk-update-icon-cache not found. Icons may not appear correctly until a reboot."
@@ -236,13 +238,13 @@ GTK3_CONFIG="$CONFIG_DIR/gtk-3.0"
 GTK4_CONFIG="$CONFIG_DIR/gtk-4.0"
 sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
 
-GTK_SETTINGS="[Settings]\ngtk-theme-name=dracula-gtk\ngtk-icon-theme-name=Dracula\ngtk-font-name=JetBrainsMono 10"
+GTK_SETTINGS="[Settings]\ngtk-theme-name=gruvbox-gtk\ngtk-icon-theme-name=Gruvbox\ngtk-font-name=JetBrainsMono 10"
 sudo -u "$USER_NAME" bash -c "echo -e \"$GTK_SETTINGS\" | tee \"$GTK3_CONFIG/settings.ini\" \"$GTK4_CONFIG/settings.ini\" >/dev/null"
 
 if command -v gsettings &>/dev/null; then
     print_success "Using gsettings to apply GTK themes."
-    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "dracula-gtk"
-    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "Dracula"
+    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "gruvbox-gtk"
+    sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "Gruvbox"
     print_success "✅ Themes applied with gsettings."
 else
     print_warning "gsettings not found. Themes may not apply correctly to all applications."
@@ -251,8 +253,8 @@ fi
 HYPR_VARS_FILE="$CONFIG_DIR/hypr/hypr-vars.conf"
 sudo -u "$USER_NAME" tee "$HYPR_VARS_FILE" >/dev/null <<'EOF_HYPR_VARS'
 # Set GTK theme and icon theme
-env = GTK_THEME,dracula-gtk
-env = ICON_THEME,Dracula
+env = GTK_THEME,gruvbox-gtk
+env = ICON_THEME,Gruvbox
 # Set XDG desktop to Hyprland
 env = XDG_CURRENT_DESKTOP,Hyprland
 EOF_HYPR_VARS

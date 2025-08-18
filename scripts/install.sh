@@ -190,7 +190,7 @@ sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/gruvbox-gtk" "$ICONS_DIR/Gruvbox" "$TEM
 print_success "✅ Old directories removed."
 
 # Download and unzip the GTK theme using curl
-GTK_THEME_ZIP_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme/archive/refs/heads/main.zip"
+GTK_THEME_ZIP_URL="https://codeload.github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme/zip/refs/heads/main"
 GTK_THEME_REPO_NAME="Gruvbox-GTK-Theme-main"
 print_success "Downloading and unzipping Gruvbox GTK theme..."
 if ! sudo -u "$USER_NAME" curl -L "$GTK_THEME_ZIP_URL" -o "$TEMP_DIR/gruvbox-gtk.zip"; then

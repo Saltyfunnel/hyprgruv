@@ -5,19 +5,17 @@
  */
 
 /* Gruvbox Color Palette - Defined as CSS variables for easy customization */
-:root {
-    --gruvbox-background: #282828;
-    --gruvbox-foreground: #ebdbb2;
-    --gruvbox-selection: #504945;
-    --gruvbox-purple: #b162b8;
-    --gruvbox-pink: #d65d0e;
-    --gruvbox-cyan: #698588;
-    --gruvbox-green: #98971a;
-    --gruvbox-orange: #fe8019;
-    --gruvbox-red: #cc241d;
-    --gruvbox-yellow: #d79921;
-    --gruvbox-comment: #a89984;
-}
+@define-color gruvbox-background #282828;
+@define-color gruvbox-foreground #ebdbb2;
+@define-color gruvbox-selection #504945;
+@define-color gruvbox-purple #b162b8;
+@define-color gruvbox-pink #d65d0e;
+@define-color gruvbox-cyan #698588;
+@define-color gruvbox-green #98971a;
+@define-color gruvbox-orange #fe8019;
+@define-color gruvbox-red #cc241d;
+@define-color gruvbox-yellow #d79921;
+@define-color gruvbox-comment #a89984;
 
 /* Global styling */
 * {
@@ -31,37 +29,37 @@
 
 /* Transparent bar background */
 window#waybar {
-    background: rgba(0, 0, 0, 0);  
-    color: var(--gruvbox-foreground);
+    background: @gruvbox-background;
+    color: @gruvbox-foreground;
 }
 
 /* Workspaces */
 #workspaces button {
     padding: 5px;
-    color: var(--gruvbox-comment);
-    background: var(--gruvbox-background);
+    color: @gruvbox-comment;
+    background: @gruvbox-background;
     margin-right: 5px;
     border-radius: 8px;
 }
 
 #workspaces button.active {
-    color: var(--gruvbox-foreground);
-    background: var(--gruvbox-selection);
+    color: @gruvbox-foreground;
+    background: @gruvbox-selection;
 }
 
 #workspaces button.focused {
-    color: var(--gruvbox-foreground);
-    background: var(--gruvbox-comment);
+    color: @gruvbox-foreground;
+    background: @gruvbox-comment;
 }
 
 #workspaces button.urgent {
-    color: var(--gruvbox-background);
-    background: var(--gruvbox-red);
+    color: @gruvbox-background;
+    background: @gruvbox-red;
 }
 
 #workspaces button:hover {
-    background: var(--gruvbox-green);
-    color: var(--gruvbox-background);
+    background: @gruvbox-green;
+    color: @gruvbox-background;
 }
 
 /* Modules */
@@ -78,11 +76,11 @@ window#waybar {
 #custom-power,
 #custom-spotify,
 #custom-updates {
-    background: var(--gruvbox-background);
+    background: @gruvbox-background;
     padding: 0px 10px;
     margin: 3px 0px;
     margin-top: 5px;
-    color: var(--gruvbox-foreground);
+    color: @gruvbox-foreground;
     border-radius: 10px;
 }
 
@@ -102,30 +100,30 @@ window#waybar {
     padding-left: 5px;
 }
 
-#cpu { color: var(--gruvbox-purple); }
-#memory { color: var(--gruvbox-orange); }
-#clock { color: var(--gruvbox-cyan); }
-#network { color: var(--gruvbox-green); }
-#pulseaudio { color: var(--gruvbox-pink); }
-#battery { color: var(--gruvbox-yellow); }
+#cpu { color: @gruvbox-purple; }
+#memory { color: @gruvbox-orange; }
+#clock { color: @gruvbox-cyan; }
+#network { color: @gruvbox-green; }
+#pulseaudio { color: @gruvbox-pink; }
+#battery { color: @gruvbox-yellow; }
 
 #custom-power {
-    color: var(--gruvbox-foreground);
-    background: var(--gruvbox-background);
+    color: @gruvbox-foreground;
+    background: @gruvbox-background;
     padding: 0 10px;
 }
 
 #custom-power:hover {
-    background: var(--gruvbox-selection);
+    background: @gruvbox-selection;
 }
 
 #custom-spotify,
 #custom-updates {
-    background: var(--gruvbox-background);
+    background: @gruvbox-background;
     padding: 0 10px;
     margin: 3px 6px 3px 0px;
     margin-top: 5px;
-    color: var(--gruvbox-foreground);
+    color: @gruvbox-foreground;
     border-radius: 8px;
     font-weight: bold;
 }

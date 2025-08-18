@@ -194,7 +194,8 @@ sudo -u "$USER_NAME" mkdir -p "$ICONS_DIR"
 print_success "Moving theme files to $THEMES_DIR..."
 # The GTK theme repo has multiple variants, we'll move the whole folder.
 if [ -d "$TEMP_DIR/Gruvbox-GTK-Theme" ]; then
-    sudo -u "$USER_NAME" mv "$TEMP_DIR/Gruvbox-GTK-Theme"/* "$THEMES_DIR"
+    # Use find to copy all contents to the target directory
+    sudo -u "$USER_NAME" find "$TEMP_DIR/Gruvbox-GTK-Theme" -maxdepth 1 -mindepth 1 -exec cp -r "{}" "$THEMES_DIR" \;
 fi
 
 print_success "Moving icon pack files to $ICONS_DIR..."

@@ -1,6 +1,6 @@
 #!/bin/bash
 # A one-stop script for installing a Gruvbox-themed Hyprland setup on Arch Linux.
-# This version uses local extracted GTK theme and icon sets from assets/themes.
+# This version uses a prebuilt GTK theme and icon set from local assets.
 
 set -euo pipefail
 
@@ -137,37 +137,76 @@ copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
 print_header "Installing GTK themes and icons"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
-THEME_NAME="gruvbox-dark"
+THEME_NAME="Gruvbox-Dark"
 ICONS_NAME="gruvbox-dark-icons-gtk-1.0.0"
 
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR" "$ICONS_DIR"
 
-# Copy extracted GTK theme folder from assets/themes to .themes
-sudo -u "$USER_NAME" cp -r "$SCRIPT_DIR/assets/themes/gruvbox-dark" "$THEMES_DIR/"
-
-# Copy extracted icon theme folder from assets/themes to .icons
-sudo -u "$USER_NAME" cp -r "$SCRIPT_DIR/assets/themes/gruvbox-dark-icons-gtk-1.0.0" "$ICONS_DIR/"
-
-# Update icon cache if possible
-if command -v gtk-update-icon-cache &>/dev/null; then
-    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/$ICONS_NAME"
+# Unpack the theme zip from assets/themes/Gruvbox-Dark-B-MB.zip
+print_header "Installing GTK theme from local zip"
+THEME_ZIP="$SCRIPT_DIR/assets/themes/Gruvbox-Dark-B-MB.zip"
+if [ ! -f "$THEME_ZIP" ]; then
+    print_error "Theme zip file not found: $THEME_ZIP"
 fi
 
-# Write GTK config to use the theme and icons
+TMP_THEME_DIR=$(mktemp -d)
+unzip -q "$THEME_ZIP" -d "$TMP_THEME_DIR"
+
+# Assume extracted folder is named 'gruvbox-dark' or similar, find it:
+EXTRACTED_THEME_DIR=$(find "$TMP_THEME_DIR" -mindepth 1 -maxdepth 1 -type d | head -n1)
+if [ -z "$EXTRACTED_THEME_DIR" ]; then
+    print_error "Could not find extracted theme folder inside zip."
+fi
+
+# Copy extracted theme folder to ~/.themes/Gruvbox-Dark
+sudo -u "$USER_NAME" rm -rf "$THEMES_DIR/$THEME_NAME"
+sudo -u "$USER_NAME" mv "$EXTRACTED_THEME_DIR" "$THEMES_DIR/$THEME_NAME"
+rm -rf "$TMP_THEME_DIR"
+print_success "✅ GTK theme installed to $THEMES_DIR/$THEME_NAME"
+
+# Unpack and install icon theme from assets/themes/gruvbox-dark-icons-gtk-1.0.0.tar.gz
+print_header "Installing icon theme from local tar.gz"
+ICON_TAR="$SCRIPT_DIR/assets/themes/gruvbox-dark-icons-gtk-1.0.0.tar.gz"
+if [ ! -f "$ICON_TAR" ]; then
+    print_error "Icon tarball not found: $ICON_TAR"
+fi
+
+TMP_ICON_DIR=$(mktemp -d)
+tar -xzf "$ICON_TAR" -C "$TMP_ICON_DIR"
+
+# Usually this extracts a folder named 'gruvbox-dark-icons-gtk-1.0.0' or similar
+EXTRACTED_ICON_DIR=$(find "$TMP_ICON_DIR" -mindepth 1 -maxdepth 1 -type d | head -n1)
+if [ -z "$EXTRACTED_ICON_DIR" ]; then
+    print_error "Could not find extracted icon folder inside tarball."
+fi
+
+# Remove old icon folder if exists, then move new
+sudo -u "$USER_NAME" rm -rf "$ICONS_DIR/$ICONS_NAME"
+sudo -u "$USER_NAME" mv "$EXTRACTED_ICON_DIR" "$ICONS_DIR/$ICONS_NAME"
+rm -rf "$TMP_ICON_DIR"
+print_success "✅ Icon theme installed to $ICONS_DIR/$ICONS_NAME"
+
+# Update icon cache if available
+if command -v gtk-update-icon-cache &>/dev/null; then
+    sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/$ICONS_NAME" || true
+fi
+
+# Write GTK config files to apply theme and icon
 GTK3_CONFIG="$CONFIG_DIR/gtk-3.0"
 GTK4_CONFIG="$CONFIG_DIR/gtk-4.0"
 sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
+
 echo -e "[Settings]\ngtk-theme-name=$THEME_NAME\ngtk-icon-theme-name=$ICONS_NAME\ngtk-font-name=JetBrainsMono 10" | sudo -u "$USER_NAME" tee "$GTK3_CONFIG/settings.ini" "$GTK4_CONFIG/settings.ini" >/dev/null
 
 echo -e "gtk-theme-name=\"$THEME_NAME\"\ngtk-icon-theme-name=\"$ICONS_NAME\"" | sudo -u "$USER_NAME" tee "$USER_HOME/.gtkrc-2.0" >/dev/null
 
-# Apply theme with gsettings if available
+# Apply theme and icons via gsettings if possible
 if command -v gsettings &>/dev/null; then
     sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "$THEME_NAME"
     sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "$ICONS_NAME"
 fi
 
-# --- Hyprland vars ---
+# --- Hyprland environment variables ---
 HYPR_VARS_FILE="$CONFIG_DIR/hypr/hypr-vars.conf"
 sudo -u "$USER_NAME" mkdir -p "$CONFIG_DIR/hypr"
 sudo -u "$USER_NAME" tee "$HYPR_VARS_FILE" >/dev/null <<EOF
@@ -176,20 +215,7 @@ export ICON_THEME=$ICONS_NAME
 export XDG_CURRENT_DESKTOP=Hyprland
 EOF
 
-# --- Hyprland config updates ---
-HYPR_CONF="$CONFIG_DIR/hypr/hyprland.conf"
-append_once() {
-    local line="$1"
-    grep -qxF "$line" "$HYPR_CONF" || echo "$line" | sudo -u "$USER_NAME" tee -a "$HYPR_CONF" >/dev/null
-}
-
-append_once "source = $HYPR_VARS_FILE"
-# Remove exec-once waybar to avoid double instances:
-# append_once "exec-once = waybar"
-append_once "exec-once = dunst"
-append_once "exec-once = hypridle"
-append_once "exec-once = wofi --show drun -i"
-append_once "exec-once = starship init bash"
+print_header "Skipping hyprland.conf modification as it already exists."
 
 # --- Thunar custom actions ---
 print_header "Setting up Thunar custom action"

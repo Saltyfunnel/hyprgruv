@@ -1,6 +1,6 @@
 #!/bin/bash
 # A one-stop script for installing a Gruvbox-themed Hyprland setup on Arch Linux.
-# This version uses a prebuilt GTK theme and icon set.
+# This version uses prebuilt GTK theme and icon archives from assets/themes folder.
 
 set -euo pipefail
 
@@ -137,40 +137,50 @@ copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
 print_header "Installing GTK themes and icons"
 THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
-THEME_NAME="Gruvbox-Dark"
-ICONS_NAME="Gruvbox-Plus-Dark"
 
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR" "$ICONS_DIR"
 
-# Clone GTK theme (alternative repo)
-TEMP_THEME_DIR=$(sudo -u "$USER_NAME" mktemp -d)
-THEME_REPO_ALT="https://gitlab.com/bryos/gruvbox-gtk-theme.git"
-sudo -u "$USER_NAME" git clone "$THEME_REPO_ALT" "$TEMP_THEME_DIR/gruvbox-gtk-theme"
-sudo -u "$USER_NAME" cp -r "$TEMP_THEME_DIR/gruvbox-gtk-theme" "$THEMES_DIR/$THEME_NAME"
-rm -rf "$TEMP_THEME_DIR"
+# Paths to your downloaded archives
+THEME_ARCHIVE="$SCRIPT_DIR/assets/themes/Gruvbox-Dark-B-MB.zip"
+ICONS_ARCHIVE="$SCRIPT_DIR/assets/themes/gruvbox-dark-icons-gtk-1.0.0.tar.gz"
 
-# Clone icon theme
-TEMP_ICON_DIR=$(sudo -u "$USER_NAME" mktemp -d)
-ICONS_REPO="https://github.com/SylEleuth/gruvbox-plus-icon-pack.git"
-sudo -u "$USER_NAME" git clone "$ICONS_REPO" "$TEMP_ICON_DIR/gruvbox-plus-icon-pack"
-sudo -u "$USER_NAME" cp -r "$TEMP_ICON_DIR/gruvbox-plus-icon-pack/Gruvbox-Plus-Dark" "$ICONS_DIR/"
-rm -rf "$TEMP_ICON_DIR"
+# Extract Gruvbox GTK Theme
+print_success "Extracting Gruvbox GTK theme..."
+sudo -u "$USER_NAME" unzip -o "$THEME_ARCHIVE" -d "$THEMES_DIR"
 
+# Extract Gruvbox Icons
+print_success "Extracting Gruvbox icons..."
+sudo -u "$USER_NAME" tar -xzf "$ICONS_ARCHIVE" -C "$ICONS_DIR"
+
+# Determine extracted folder names (adjust if archives contain nested folders)
+THEME_NAME=$(basename "$THEME_ARCHIVE" .zip)           # "Gruvbox-Dark-B-MB"
+ICONS_NAME=$(tar -tf "$ICONS_ARCHIVE" | head -1 | cut -f1 -d"/")  # first folder in tar.gz
+
+if [ -z "$THEME_NAME" ] || [ -z "$ICONS_NAME" ]; then
+    print_warning "Could not automatically determine theme or icon folder names."
+fi
+
+# Update icon cache if possible
 if command -v gtk-update-icon-cache &>/dev/null; then
     sudo -u "$USER_NAME" gtk-update-icon-cache -f -t "$ICONS_DIR/$ICONS_NAME"
 fi
 
+# Setup GTK config files to use the new theme and icons
 GTK3_CONFIG="$CONFIG_DIR/gtk-3.0"
 GTK4_CONFIG="$CONFIG_DIR/gtk-4.0"
 sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
+
 echo -e "[Settings]\ngtk-theme-name=$THEME_NAME\ngtk-icon-theme-name=$ICONS_NAME\ngtk-font-name=JetBrainsMono 10" | sudo -u "$USER_NAME" tee "$GTK3_CONFIG/settings.ini" "$GTK4_CONFIG/settings.ini" >/dev/null
 
 echo -e "gtk-theme-name=\"$THEME_NAME\"\ngtk-icon-theme-name=\"$ICONS_NAME\"" | sudo -u "$USER_NAME" tee "$USER_HOME/.gtkrc-2.0" >/dev/null
 
+# Apply theme and icons via gsettings if available
 if command -v gsettings &>/dev/null; then
     sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface gtk-theme "$THEME_NAME"
     sudo -u "$USER_NAME" gsettings set org.gnome.desktop.interface icon-theme "$ICONS_NAME"
 fi
+
+print_success "✅ GTK theme and icons installed and applied."
 
 # --- Hyprland vars ---
 HYPR_VARS_FILE="$CONFIG_DIR/hypr/hypr-vars.conf"

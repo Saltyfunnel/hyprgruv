@@ -1,7 +1,7 @@
 #!/bin/bash
-# A simplified script for installing a Hyprland setup on Arch Linux.
-# This script handles system-level package installation and copying of
-# core dotfiles, but leaves GTK theme and icon setup for manual configuration.
+# A one-stop script for installing a Gruvbox-themed Hyprland setup on Arch Linux.
+# This script handles both system-level and user-level tasks in a single run,
+# using only official Arch Linux repositories via pacman and a single GitHub repository.
 set -euo pipefail
 
 # --- Global Helper Functions ---
@@ -31,7 +31,7 @@ run_command() {
     local description="$2"
     local confirm_needed="${3:-"yes"}"
 
-    if [ "$confirm_needed" == "yes" ] && [ "$CONFIRMATION" == "yes" ]; then
+    if [[ "$confirm_needed" == "yes" ]] && [[ "$CONFIRMATION" == "yes" ]]; then
         read -p "Install '$description'? Press Enter to continue..."
     fi
 
@@ -45,7 +45,7 @@ run_command() {
 # --- Main Execution Logic ---
 
 # Check if the script is run as root
-if [ "$EUID" -ne 0 ]; then
+if [[ "$EUID" -ne 0 ]]; then
     print_error "This script must be run as root. Please run with 'sudo bash $0'."
 fi
 
@@ -66,7 +66,7 @@ fi
 # --- Pre-run checks ---
 print_header "Running Pre-run Checks"
 
-if [ ! -d "$SCRIPT_DIR/configs" ]; then
+if [[ ! -d "$SCRIPT_DIR/configs" ]]; then
     print_error "Required 'configs' directory not found in the script's directory: $SCRIPT_DIR.
     Please ensure the entire repository is cloned and you are running the script from its root directory."
 fi
@@ -84,7 +84,7 @@ print_success "✅ Required tools (git, curl) confirmed."
 print_header "Starting System-Level Setup"
 
 # Update system and install required packages with pacman
-if [ "$CONFIRMATION" == "yes" ]; then
+if [[ "$CONFIRMATION" == "yes" ]]; then
     read -p "Update system and install packages? Press Enter to continue..."
 fi
 PACKAGES=(
@@ -92,7 +92,7 @@ PACKAGES=(
     ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-fira-code ttf-fira-mono
     sddm kitty nano tar unzip gnome-disk-utility code mpv dunst pacman-contrib exo firefox cava steam
     thunar thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer file-roller
-    gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome gtk-engine-murrine
+    gvfs gvfs-mtp gvfs-gphoto2 gvfs-smb polkit polkit-gnome
     waybar hyprland hyprpaper hypridle hyprlock starship fastfetch wofi
 )
 if ! pacman -Syu "${PACKAGES[@]:-}" --noconfirm; then
@@ -115,7 +115,7 @@ elif echo "$GPU_INFO" | grep -qi "intel"; then
     run_command "pacman -S --noconfirm mesa libva-intel-driver intel-media-driver vulkan-intel" "Install Intel drivers"
 else
     print_warning "No supported GPU detected. Info: $GPU_INFO"
-    if [ "$CONFIRMATION" == "yes" ]; then
+    if [[ "$CONFIRMATION" == "yes" ]]; then
         read -p "Try installing NVIDIA drivers anyway? [Y/n]: " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -126,7 +126,7 @@ fi
 print_success "✅ GPU driver installation complete."
 
 # Enable services
-if [ "$CONFIRMATION" == "yes" ]; then
+if [[ "$CONFIRMATION" == "yes" ]]; then
     read -p "Enable system services? Press Enter to continue..."
 fi
 systemctl enable --now polkit.service
@@ -168,7 +168,7 @@ copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
 
 # Copy the starship.toml file to the root of the .config directory
 print_success "Copying starship.toml to $CONFIG_DIR/starship.toml"
-if [ -f "$SCRIPT_DIR/configs/starship/starship.toml" ]; then
+if [[ -f "$SCRIPT_DIR/configs/starship/starship.toml" ]]; then
     if sudo -u "$USER_NAME" cp "$SCRIPT_DIR/configs/starship/starship.toml" "$CONFIG_DIR/starship.toml"; then
         print_success "✅ Copied starship.toml to ~/.config/starship.toml."
     else
@@ -177,5 +177,205 @@ if [ -f "$SCRIPT_DIR/configs/starship/starship.toml" ]; then
 else
     print_warning "starship.toml not found in the source directory. The default configuration will be used."
 fi
+
+
+# --- Setting up GTK themes and icons from the GitHub repository ---
+print_header "Installing Gruvbox GTK theme and icons from GitHub"
+
+THEMES_DIR="$USER_HOME/.themes"
+ICONS_DIR="$USER_HOME/.icons"
+GRUBOX_REPO_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
+CLONE_DIR="/tmp/gruvbox-clone"
+
+# Clone the repository
+if ! sudo -u "$USER_NAME" git clone --depth 1 "$GRUBOX_REPO_URL" "$CLONE_DIR"; then
+    print_error "Failed to clone the Gruvbox GTK repository. Please check your internet connection."
+fi
+print_success "✅ Gruvbox GTK repository cloned successfully."
+
+# Create theme and icon directories
+sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR" "$ICONS_DIR"
+
+# Move the theme
+sudo -u "$USER_NAME" mv "$CLONE_DIR/Gruvbox-GTK-Theme" "$THEMES_DIR/"
+print_success "✅ Gruvbox GTK theme moved to ~/.themes."
+
+# Move the icons
+sudo -u "$USER_NAME" mv "$CLONE_DIR/icons" "$ICONS_DIR/Gruvbox"
+print_success "✅ Gruvbox icons moved to ~/.icons."
+
+# Clean up temporary clone directory
+sudo rm -rf "$CLONE_DIR"
+print_success "✅ Temporary clone directory cleaned up."
+
+
+GTK3_CONFIG="$CONFIG_DIR/gtk-3.0"
+GTK4_CONFIG="$CONFIG_DIR/gtk-4.0"
+sudo -u "$USER_NAME" mkdir -p "$GTK3_CONFIG" "$GTK4_CONFIG"
+
+GTK_SETTINGS="[Settings]\ngtk-theme-name=Gruvbox-GTK-Theme\ngtk-icon-theme-name=Gruvbox\ngtk-font-name=JetBrainsMono 10"
+sudo -u "$USER_NAME" bash -c "echo -e \"$GTK_SETTINGS\" | tee \"$GTK3_CONFIG/settings.ini\" \"$GTK4_CONFIG/settings.ini\" >/dev/null"
+
+# --- New, robust block to handle gsettings and Thunar restart ---
+print_header "Applying GTK themes with gsettings and restarting Thunar"
+sudo -u "$USER_NAME" bash <<EOF_GSETTINGS
+    set -euo pipefail
+    
+    # Get the user's UID and DBUS path in the correct context
+    USER_UID=\$(id -u)
+    DBUS_PATH="unix:path=/run/user/\${USER_UID}/bus"
+    
+    # GSettings commands
+    if command -v gsettings &>/dev/null; then
+        echo 'Using gsettings to apply GTK themes.'
+        env DBUS_SESSION_BUS_ADDRESS="\${DBUS_PATH}" gsettings set org.gnome.desktop.interface gtk-theme "Gruvbox-GTK-Theme"
+        env DBUS_SESSION_BUS_ADDRESS="\${DBUS_PATH}" gsettings set org.gnome.desktop.interface icon-theme "Gruvbox"
+        echo '✅ Themes applied with gsettings.'
+    else
+        echo 'gsettings not found. Themes may not apply correctly to all applications.'
+    fi
+    
+    # Thunar restart commands
+    if command -v thunar &>/dev/null; then
+        echo 'Restarting Thunar to apply changes'
+        env DBUS_SESSION_BUS_ADDRESS="\${DBUS_PATH}" pkill thunar || true
+        env DBUS_SESSION_BUS_ADDRESS="\${DBUS_PATH}" thunar &
+        echo '✅ Thunar restarted successfully.'
+    else
+        echo 'Thunar not found, skipping restart.'
+    fi
+EOF_GSETTINGS
+# --- End of new block ---
+
+# Configure starship and fastfetch prompt
+print_header "Configuring Starship and Fastfetch prompt"
+if [[ -f "$USER_HOME/.bashrc" ]]; then
+    # Starship
+    if ! sudo -u "$USER_NAME" grep -q "eval \"\$(starship init bash)\"" "$USER_HOME/.bashrc"; then
+        sudo -u "$USER_NAME" echo -e "\n# Starship prompt\neval \"\$(starship init bash)\"" >> "$USER_HOME/.bashrc"
+        print_success "✅ Added starship to .bashrc."
+    else
+        print_success "✅ Starship already configured in .bashrc, skipping."
+    fi
+
+    # Fastfetch
+    if ! sudo -u "$USER_NAME" grep -q "fastfetch" "$USER_HOME/.bashrc"; then
+        sudo -u "$USER_NAME" echo -e "\n# Run fastfetch on terminal startup\nfastfetch" >> "$USER_HOME/.bashrc"
+        print_success "✅ Added fastfetch to .bashrc."
+    else
+        print_success "✅ Fastfetch already configured in .bashrc, skipping."
+    fi
+else
+    print_warning ".bashrc not found, skipping starship and fastfetch configuration. Please add them to your shell's config file."
+fi
+
+# We are going to make sure that the hyprland.conf file sources all of the necessary configs that we are providing,
+# and also launches the required apps that we installed with pacman.
+print_header "Updating hyprland.conf with necessary 'exec-once' commands and keybindings"
+HYPR_CONF="$CONFIG_DIR/hypr/hyprland.conf"
+# Sourced by the setup script to set GTK and icon themes
+HYPR_VARS_FILE="$CONFIG_DIR/hypr/hypr-vars.conf"
+sudo -u "$USER_NAME" tee "$HYPR_VARS_FILE" >/dev/null <<'EOF_HYPR_VARS'
+# Set GTK theme and icon theme
+env = GTK_THEME,Gruvbox-GTK-Theme
+env = ICON_THEME,Gruvbox
+# Set XDG desktop to Hyprland
+env = XDG_CURRENT_DESKTOP,Hyprland
+EOF_HYPR_VARS
+if [[ -f "$HYPR_CONF" ]] && ! grep -q "source = $HYPR_VARS_FILE" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Sourced by the setup script to set GTK and icon themes\nsource = $HYPR_VARS_FILE" >> "$HYPR_CONF"
+fi
+# Launch hyprpaper for wallpaper management
+if [[ -f "$HYPR_CONF" ]] && ! grep -q "exec-once = hyprpaper" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Launch hyprpaper for wallpaper management\nexec-once = hyprpaper" >> "$HYPR_CONF"
+fi
+# Launch waybar
+if [[ -f "$HYPR_CONF" ]] && ! grep -q "exec-once = waybar" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Launch waybar, the status bar\nexec-once = waybar" >> "$HYPR_CONF"
+fi
+# Launch dunst for notifications
+if [[ -f "$HYPR_CONF" ]] && ! grep -q "exec-once = dunst" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Launch dunst, the notification daemon\nexec-once = dunst" >> "$HYPR_CONF"
+fi
+# Launch hypridle for power management and locking
+if [[ -f "$HYPR_CONF" ]] && ! grep -q "exec-once = hypridle" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Launch hypridle for power management and locking\nexec-once = hypridle" >> "$HYPR_CONF"
+fi
+# Wofi Keybinding
+if [[ -f "$HYPR_CONF" ]] && ! grep -q "bind = \$mainMod, D, exec, wofi --show drun" "$HYPR_CONF"; then
+    sudo -u "$USER_NAME" echo -e "\n# Wofi App Launcher keybinding\nbind = \$mainMod, D, exec, wofi --show drun" >> "$HYPR_CONF"
+fi
+print_success "✅ hyprland.conf updated with core components and keybindings."
+
+
+print_header "Creating backgrounds directory"
+WALLPAPER_SRC="$SCRIPT_DIR/assets/backgrounds"
+WALLPAPER_DEST="$CONFIG_DIR/assets/backgrounds"
+if [[ ! -d "$WALLPAPER_SRC" ]]; then
+    print_warning "Source backgrounds directory not found. Creating a placeholder directory at $WALLPAPER_SRC. Please place your wallpapers there."
+    sudo -u "$USER_NAME" mkdir -p "$WALLPAPER_SRC"
+else
+    print_success "✅ Source backgrounds directory exists."
+fi
+
+print_success "Copying backgrounds from '$WALLPAPER_SRC' to '$WALLPAPER_DEST'."
+sudo -u "$USER_NAME" mkdir -p "$WALLPAPER_DEST"
+sudo -u "$USER_NAME" cp -r "$WALLPAPER_SRC/." "$WALLPAPER_DEST"
+print_success "✅ Wallpapers copied to $WALLPAPER_DEST."
+
+print_header "Configuring hyprpaper"
+HYPRPAPER_CONF="$CONFIG_DIR/hypr/hyprpaper.conf"
+if [[ ! -f "$HYPRPAPER_CONF" ]]; then
+    print_warning "hyprpaper.conf not found, creating a new one."
+    # Create the file with the correct content
+    sudo -u "$USER_NAME" tee "$HYPRPAPER_CONF" >/dev/null <<'EOF_HYPRPAPER'
+# Preload your wallpaper
+# The path should be an absolute path to your wallpaper file
+preload = ~/.config/assets/backgrounds/default.png
+# set the wallpaper for a workspace
+wallpaper = ,~/.config/assets/backgrounds/default.png
+# Or to use a specific wallpaper for a specific monitor:
+# wallpaper = HDMI-A-1,~/.config/assets/backgrounds/default.png
+EOF_HYPRPAPER
+else
+    print_success "hyprpaper.conf exists, updating."
+    # Add preload and wallpaper lines if they don't exist
+    if ! sudo -u "$USER_NAME" grep -q "preload" "$HYPRPAPER_CONF"; then
+        sudo -u "$USER_NAME" echo "preload = ~/.config/assets/backgrounds/default.png" >> "$HYPRPAPER_CONF"
+    fi
+    if ! sudo -u "$USER_NAME" grep -q "wallpaper" "$HYPRPAPER_CONF"; then
+        sudo -u "$USER_NAME" echo "wallpaper = ,~/.config/assets/backgrounds/default.png" >> "$HYPR_CONF"
+    fi
+fi
+print_success "✅ hyprpaper configured."
+
+
+print_header "Setting up Thunar custom action"
+UCA_DIR="$CONFIG_DIR/Thunar"
+UCA_FILE="$UCA_DIR/uca.xml"
+sudo -u "$USER_NAME" mkdir -p "$UCA_DIR"
+sudo -u "$USER_NAME" chmod 700 "$UCA_DIR"
+
+if [[ ! -f "$UCA_FILE" ]]; then
+    sudo -u "$USER_NAME" tee "$UCA_FILE" >/dev/null <<'EOF_UCA'
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+    <action>
+        <icon>utilities-terminal</icon>
+        <name>Open Kitty Here</name>
+        <command>kitty --directory=%d</command>
+        <description>Open kitty terminal in the current folder</description>
+        <patterns>*</patterns>
+        <directories_only>true</directories_only>
+        <startup_notify>true</startup_notify>
+    </action>
+</actions>
+EOF_UCA
+fi
+print_success "✅ Thunar action configured."
+
+sudo -u "$USER_NAME" pkill thunar || true
+sudo -u "$USER_NAME" thunar &
+print_success "✅ Thunar restarted."
 
 print_success "\n🎉 The installation is complete! Please reboot your system to apply all changes."

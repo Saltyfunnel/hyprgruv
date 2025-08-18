@@ -186,6 +186,7 @@ THEMES_DIR="$USER_HOME/.themes"
 ICONS_DIR="$USER_HOME/.icons"
 GRUBOX_REPO_URL="https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git"
 CLONE_DIR="/tmp/gruvbox-clone"
+THEME_DIR_NAME="Gruvbox-GTK-Theme"
 
 # Clone the repository
 if ! sudo -u "$USER_NAME" git clone --depth 1 "$GRUBOX_REPO_URL" "$CLONE_DIR"; then
@@ -196,17 +197,13 @@ print_success "✅ Gruvbox GTK repository cloned successfully."
 # Create theme and icon directories
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR" "$ICONS_DIR"
 
-# Move the theme
-sudo -u "$USER_NAME" mv "$CLONE_DIR/Gruvbox-GTK-Theme" "$THEMES_DIR/"
+# Move the entire cloned directory to the user's themes folder
+sudo -u "$USER_NAME" mv "$CLONE_DIR" "$THEMES_DIR/$THEME_DIR_NAME"
 print_success "✅ Gruvbox GTK theme moved to ~/.themes."
 
-# Move the icons
-sudo -u "$USER_NAME" mv "$CLONE_DIR/icons" "$ICONS_DIR/Gruvbox"
+# Move the icons folder from the themes directory to the user's icons directory
+sudo -u "$USER_NAME" mv "$THEMES_DIR/$THEME_DIR_NAME/icons" "$ICONS_DIR/Gruvbox"
 print_success "✅ Gruvbox icons moved to ~/.icons."
-
-# Clean up temporary clone directory
-sudo rm -rf "$CLONE_DIR"
-print_success "✅ Temporary clone directory cleaned up."
 
 
 GTK3_CONFIG="$CONFIG_DIR/gtk-3.0"

@@ -117,8 +117,8 @@ copy_configs() {
     local config_name="$3"
 
     print_success "Copying $config_name from '$source_dir' to '$dest_dir'."
-    sudo -u "$USER_NAME" mkdir -p "$dest_dir"
-    sudo -u "$USER_NAME" cp -r "$source_dir/." "$dest_dir"
+    sudo -u "$USER_NAME" mkdir -p "$(dirname "$dest_dir")"
+    sudo -u "$USER_NAME" cp -r "$source_dir" "$dest_dir"
     print_success "✅ Copied $config_name."
 }
 
@@ -127,7 +127,9 @@ copy_configs "$SCRIPT_DIR/configs/hypr" "$CONFIG_DIR/hypr" "Hyprland"
 copy_configs "$SCRIPT_DIR/configs/kitty" "$CONFIG_DIR/kitty" "Kitty"
 copy_configs "$SCRIPT_DIR/configs/dunst" "$CONFIG_DIR/dunst" "Dunst"
 copy_configs "$SCRIPT_DIR/configs/fastfetch" "$CONFIG_DIR/fastfetch" "Fastfetch"
-copy_configs "$SCRIPT_DIR/configs/starship/starship.toml" "$CONFIG_DIR/starship.toml" "Starship"
+# starship.toml is a file, copy directly to ~/.config/starship.toml
+sudo -u "$USER_NAME" cp "$SCRIPT_DIR/configs/starship/starship.toml" "$CONFIG_DIR/starship.toml"
+print_success "✅ Copied Starship configuration."
 copy_configs "$SCRIPT_DIR/configs/wofi" "$CONFIG_DIR/wofi" "Wofi"
 
 # --- GTK Themes and Icons ---
@@ -139,14 +141,14 @@ ICONS_NAME="Gruvbox-Plus-Dark"
 
 sudo -u "$USER_NAME" mkdir -p "$THEMES_DIR" "$ICONS_DIR"
 
-# Clone GTK theme
+# Clone GTK theme from bryos/gruvbox-gtk-theme (prebuilt)
 TEMP_THEME_DIR=$(sudo -u "$USER_NAME" mktemp -d)
 THEME_REPO_ALT="https://gitlab.com/bryos/gruvbox-gtk-theme.git"
 sudo -u "$USER_NAME" git clone "$THEME_REPO_ALT" "$TEMP_THEME_DIR/gruvbox-gtk-theme"
 sudo -u "$USER_NAME" cp -r "$TEMP_THEME_DIR/gruvbox-gtk-theme" "$THEMES_DIR/$THEME_NAME"
 rm -rf "$TEMP_THEME_DIR"
 
-# Clone icon theme
+# Clone icon theme (Gruvbox Plus Dark)
 TEMP_ICON_DIR=$(sudo -u "$USER_NAME" mktemp -d)
 ICONS_REPO="https://github.com/SylEleuth/gruvbox-plus-icon-pack.git"
 sudo -u "$USER_NAME" git clone "$ICONS_REPO" "$TEMP_ICON_DIR/gruvbox-plus-icon-pack"
